@@ -15,18 +15,17 @@ DROP TABLE IF EXISTS Reports;
 CREATE TABLE Reports (
     report_name  VARCHAR(20) NOT NULL,
     refresh    INT NOT NULL,
-    done    INT NOT NULL
+    done    INT NOT NULL,
+    priority INT NOT NULL,
+    error INT NULL,
+    updatetime REAL NULL
 );
 
-''')
-
-
-cur.execute('''INSERT INTO Reports
-    (report_name, refresh, done) 
-    VALUES ( '1.xlsx', 1 , 0),
-        ( '1_NO.xlsx', 0 , 0),
-        ( '2.xlsm', 1 , 0),
-        ( '3.xlsb', 1 , 0)
+INSERT INTO Reports (report_name, refresh, done, priority) 
+ VALUES ( '1.xlsx', 0 , 0, 2),
+        ( '1_NO.xlsx', 0 , 0, 2),
+        ( '2.xlsm', 1 , 0, 2),
+        ( '3.xlsb', 1 , 0, 1)
     ''')
 
 conn.commit()

@@ -5,41 +5,55 @@ Created on Sun Jan  7 16:23:59 2018
 """
 from os import path
 
-import sqlite3
+import pythoncom
 import win32com.client
 
-def refresh(root, f):
+class ReadOnlyException(Exception):
+    """Write access is not permitted on file. """
+    def __init__(self, f, message='Write access is not permitted on file:', *args):
+        self.message = message
+        self.f = f      
+        # allow users initialize misc. arguments as any other builtin Error
+        super(ReadOnlyException, self).__init__(f, message, *args)
+            
+
+def update_file(root, f):
     ''' Function to refresh excel files and write in db that file was refreshed.
         Input: root - path of folder where file is;
             f - excel file name.
+        Return 1 if update was successful, otherwise 0.
     '''
+    successful_update = 0
     try:
         xl = win32com.client.DispatchEx("Excel.Application")
+        xl.DisplayAlerts = False
+        
         wb = xl.Workbooks.Open(path.join(root, f))
-
-        wb.RefreshAll()
         
-        wb.Save()
-        wb.Close(True)
+        # check whether the file is read-only
+        if xl.ActiveWorkbook.ReadOnly == True:
+            raise ReadOnlyException(f)
+        
+        xl.Application.Run(f + '!Update')
+        
+        wb.Close(SaveChanges=1)
         print(f, " updated.")
-        
-        conn = sqlite3.connect('reports.sqlite')
-        cur = conn.cursor()
-        
-        # Write in the db that file have been updated
-        try:
-            cur.execute('UPDATE Reports SET Done = 1 WHERE report_name = ?', (f, ))
-            conn.commit()
-            
-        except Exception as e:
-            print( "Error: %s" % str(e) )
-            
-        finally:    
-            conn.close()
+        successful_update = 1
 
-    except Exception as e:
+    except pythoncom.com_error as e:
         print( "Error: %s" % str(e) )
         print("Failed to update ", f)
+        
+    except ReadOnlyException as e:
+        print(e.message, e.f)
+        
+    except Exception as e:
+        print(e)
 
     finally:
         xl.Quit()
+        return successful_update
+    
+if __name__ == '__main__':
+    from os import getcwd
+    update_file(path.join(getcwd(), 'XL'), '2.xlsm')

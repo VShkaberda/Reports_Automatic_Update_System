@@ -4,66 +4,65 @@ Created on Sun Jan  7 15:53:26 2018
 @author: Vadim Shkaberda
 """
 
+from db_connect import DBConnect
 from os import path, getcwd
-from xl import refresh
+from xl import update_file
 
-import sqlite3
 import threading
 import time
 
-
-def main():
-    
-    #root = r'XL'
-    root = path.join(getcwd(), 'XL')    
-    
-    # Check if interrupted
-    while thread.is_alive():
-        files = []
         
-        # Open database
-        conn = sqlite3.connect('reports.sqlite')
-        cur = conn.cursor()
-        
-        try:
-            # List of reports
-            cur.execute("SELECT report_name, refresh, done FROM Reports")
-            while True:
-                sql_data = cur.fetchone()
-                if sql_data is None:
-                    break
-                # if need to update and NOT updated yet
-                if sql_data[1] and not sql_data[2]:
-                    files.append(sql_data)
-            conn.commit()
-        
-        finally:    
-            conn.close()
-        
-        # Checking for each file needed to update
-        for f in files:
-            # additional check for interruption
-            if thread.is_alive():                
-                refresh(root, f[0])
-                time.sleep(5)
-            
-    print('Refreshing is interrupted.')
-    
-        
-def test_thread():
+def control_thread():
     ''' Function that monitors user input.
         If 1 have been inputed:
         function is exiting, causing interruption of main()'''
     while True:
-        output = input("Press 1 if you want to interrupt refreshing.\n")
+        output = input("Press 1 if you want to interrupt programm.\n")
         if output == '1':
+            print('Programm is interrupted.')
             break
 
 
+def main():
+    with DBConnect() as dbconn:
+        while thread.is_alive():
+        #while True:
+            filedata = dbconn.file_to_update()
+            # if no files to update
+            if filedata is None:
+                print('No files to update.')
+                #break
+                time.sleep(5)
+                continue
+            filename = filedata[0]
+            start_update = time.time()
+            successful_update = update_file(root, filename)
+            update_duration = time.time() - start_update
+            # Write in the db result of update
+            print(successful_update)
+            if successful_update:
+                dbconn.successful_update(filename, update_duration)
+            else:
+                dbconn.failed_update(filename, update_duration)
+            time.sleep(5)
+
+
 if __name__ == "__main__":
+    root = path.join(getcwd(), 'XL')
+    
     # Start thread that monitors user input
-    thread = threading.Thread(target=test_thread)
+    thread = threading.Thread(target=control_thread)
     # Python program exits when only daemon threads are left
-    thread.daemon = False
+    thread.daemon = True
     thread.start()
-    main()
+    
+    connection_retry = 0
+    while connection_retry < 3:
+        try:
+            main()        
+        except sqlite3.OperationalError as e:
+            print(e)
+            print('Retrying to connect in 5 minutes. \
+                  Number of retries:', connection_retry)
+            connection_retry += 1
+            time.sleep(300)
