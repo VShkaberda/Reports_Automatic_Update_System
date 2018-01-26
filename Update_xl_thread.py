@@ -4,8 +4,9 @@ Created on Sun Jan  7 15:53:26 2018
 @author: Vadim Shkaberda
 """
 
-from db_connect import DBConnect
+from db_connect_sql import DBConnect
 from os import path, getcwd
+from pyodbc import Error as SQLError
 from xl import update_file
 
 import threading
@@ -30,25 +31,27 @@ def main():
             filedata = dbconn.file_to_update()
             # if no files to update
             if filedata is None:
-                print('No files to update.')
+                print('No files to update. Waiting 30 seconds.')
                 #break
-                time.sleep(5)
+                time.sleep(30)
                 continue
             filename = filedata[0]
-            start_update = time.time()
-            successful_update = update_file(root, filename)
-            update_duration = time.time() - start_update
+            root = filedata[1]
+            reportID = filedata[2]
+            #start_update = time.time()
+            successful_update = update_file('\\' + root, filename)
+            #update_duration = time.time() - start_update
+            update_time = time.strftime("%d-%m-%Y %H:%M:%S", time.localtime())
             # Write in the db result of update
-            print(successful_update)
             if successful_update:
-                dbconn.successful_update(filename, update_duration)
+                dbconn.successful_update(reportID, update_time)
             else:
-                dbconn.failed_update(filename, update_duration)
+                dbconn.failed_update(reportID, update_time)
             time.sleep(5)
 
 
 if __name__ == "__main__":
-    root = path.join(getcwd(), 'XL')
+    #root = path.join(getcwd(), 'XL')
     
     # Start thread that monitors user input
     thread = threading.Thread(target=control_thread)
@@ -60,9 +63,9 @@ if __name__ == "__main__":
     while connection_retry < 3:
         try:
             main()        
-        except sqlite3.OperationalError as e:
+        except SQLError as e:
             print(e)
             print('Retrying to connect in 5 minutes. \
                   Number of retries:', connection_retry)
             connection_retry += 1
-            time.sleep(300)
+            time.sleep(5)

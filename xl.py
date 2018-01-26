@@ -25,7 +25,7 @@ def update_file(root, f):
     '''
     successful_update = 0
     try:
-        xl = win32com.client.DispatchEx("Excel.Application")
+        xl = win32com.client.Dispatch("Excel.Application")
         xl.DisplayAlerts = False
         
         wb = xl.Workbooks.Open(path.join(root, f))
@@ -34,20 +34,21 @@ def update_file(root, f):
         if xl.ActiveWorkbook.ReadOnly == True:
             raise ReadOnlyException(f)
         
-        xl.Application.Run(f + '!Update')
+        xl.Application.Run('\'' + f + '\'!Update')
         
         wb.Close(SaveChanges=1)
         print(f, " updated.")
         successful_update = 1
 
     except pythoncom.com_error as e:
-        print( "Error: %s" % str(e) )
-        print("Failed to update ", f)
+        print( "Excel Error: %s" % str(e) )     
         
     except ReadOnlyException as e:
+        print( "ReadOnly Error: %s" % str(e) )
         print(e.message, e.f)
         
     except Exception as e:
+        print( "Common Error: %s" % str(e) )
         print(e)
 
     finally:
