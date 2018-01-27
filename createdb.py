@@ -13,19 +13,20 @@ cur.executescript('''
 DROP TABLE IF EXISTS Reports;
 
 CREATE TABLE Reports (
+    reportID INT NOT NULL,
     report_name  VARCHAR(20) NOT NULL,
     refresh    INT NOT NULL,
     done    INT NOT NULL,
     priority INT NOT NULL,
     error INT NULL,
-    updatetime REAL NULL
+    updatetime VARCHAR(20) NULL
 );
 
-INSERT INTO Reports (report_name, refresh, done, priority) 
- VALUES ( '1.xlsx', 0 , 0, 2),
-        ( '1_NO.xlsx', 0 , 0, 2),
-        ( '2.xlsm', 1 , 0, 2),
-        ( '3.xlsb', 1 , 0, 1)
+INSERT INTO Reports (reportID, report_name, refresh, done, priority)
+ VALUES ( 1, '1.xlsx',      0 , 0, 2),
+        ( 2, '1_NO.xlsx',   0 , 0, 2),
+        ( 3, '2.xlsm',      1 , 0, 2),
+        ( 4, '3.xlsb',      1 , 0, 1)
     ''')
 
 conn.commit()
