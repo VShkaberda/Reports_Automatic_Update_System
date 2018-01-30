@@ -19,42 +19,49 @@ class DBConnect(object):
         self.__db = pyodbc.connect(conn_str)
         self.__cursor = self.__db.cursor()
         return self
-    
+
     def __exit__(self, type, value, traceback):
         self.__db.close()
-    
+
     def file_to_update(self):
         ''' Fetching one file to be updated next.
         '''
         self.__cursor.execute('''SELECT top 1 UploadFileName, FirstResourceLink, ReportID
                   FROM [SILPOAnalitic].[dbo].[VV_Hermes_Reports_Temp]
                   where 1=1
-                	and 
-                	((datepart(weekday,ExecutedJob) = iif(DAY1=1, 1,0) AND datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
+                	and
+                	((datepart(weekday,ExecutedJob) = iif(DAY1=1, 1, 0) AND
+                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
                 	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY2=1, 2,0) AND datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
+                	(datepart(weekday,ExecutedJob) = iif(DAY2=1, 2, 0) AND
+                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
                 	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY3=1, 3,0) AND datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
+                	(datepart(weekday,ExecutedJob) = iif(DAY3=1, 3, 0) AND
+                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
                 	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY4=1, 4,0) AND datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
+                	(datepart(weekday,ExecutedJob) = iif(DAY4=1, 4, 0) AND
+                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
                 	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY5=1, 5,0) AND datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
+                	(datepart(weekday,ExecutedJob) = iif(DAY5=1, 5, 0) AND
+                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
                 	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY6=1, 6,0) AND datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
+                	(datepart(weekday,ExecutedJob) = iif(DAY6=1, 6, 0) AND
+                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
                 	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY7=1, 7,0) AND datepart(weekday,ExecutedJob) =  datepart(weekday, getdate())))
-                	AND 
-                	ExecutedJob > LastDateUpdate
-                	and 
-                	StatusID = 1 --рабочий 
+                	(datepart(weekday,ExecutedJob) = iif(DAY7=1, 7, 0) AND
+                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate())))
+                	AND
+                	ExecutedJob > ISNULL(LastDateUpdate, 0)
+                	and
+                	StatusID = 1 --рабочий
                 	and
                 	ScheduleTypeID = 0 --прямой график
-                	and 
+                	and
                 	convert(time,getdate()) >= timefrom  -- обновлять позже назначеного
                 and isnull(Error, 0) != 1
                 order by [priority]''')
         return self.__cursor.fetchone()
-    
+
     def successful_update(self, rID, update_time):
         ''' Update data on server that file update was succeeded.
         '''
@@ -63,7 +70,7 @@ class DBConnect(object):
                               SET LastDateUpdate = cast(? as datetime) \
                               WHERE ReportID = ?', (update_time, rID))
         self.__db.commit()
-    
+
     def failed_update(self, rID, update_time):
         ''' Update data on server in case if update was failed.
         '''

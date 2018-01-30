@@ -35,14 +35,17 @@ class Main(object):
         ''' Main cycle. Gets info about file, calls update_file function
             (that runs macro "Update" in Excel file) and saving result to db.
         '''
-         # check if thread was user interrupted
+        sleep_duration = 30
+        # check if thread was user interrupted
         while thread.is_alive():
             # get file
             file_sql = dbconn.file_to_update()
             # if no files to update
             if file_sql is None:
-                print('No files to update. Waiting 30 seconds.')
-                time.sleep(30)
+                print('No files to update. Waiting {} seconds.'.format(sleep_duration))
+                time.sleep(sleep_duration)
+                if sleep_duration < 3600:
+                    sleep_duration *= 2
                 continue
             self.fileinfo['fname'] = file_sql[0]
             self.fileinfo['fpath'] = '\\' + file_sql[1]
@@ -57,6 +60,7 @@ class Main(object):
             # Write in the db result of update
             self.db_update(dbconn)
             time.sleep(5)
+            sleep_duration = 30
         print('Exiting main cycle...')
 
 
@@ -114,5 +118,5 @@ if __name__ == "__main__":
                   Number of retries:', connection_retry[0])
             connection_retry[0] += 1
             connection_retry[1] = time.time()
-            time.sleep(15)
+            time.sleep(300)
     print('Exiting program.')
