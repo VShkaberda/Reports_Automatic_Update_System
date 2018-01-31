@@ -8,6 +8,7 @@ from db_connect_sql import DBConnect
 from pyodbc import Error as SQLError
 from xl import update_file
 
+import datetime
 import threading
 import time
 
@@ -16,6 +17,7 @@ class Main(object):
     def __init__(self, fileinfo):
         # Info about last file
         self.fileinfo = fileinfo
+        self.sleep_duration = 30 # if no files to update
 
 
     def run(self):
@@ -35,32 +37,26 @@ class Main(object):
         ''' Main cycle. Gets info about file, calls update_file function
             (that runs macro "Update" in Excel file) and saving result to db.
         '''
-        sleep_duration = 30
         # check if thread was user interrupted
         while thread.is_alive():
             # get file
             file_sql = dbconn.file_to_update()
             # if no files to update
             if file_sql is None:
-                print('No files to update. Waiting {} seconds.'.format(sleep_duration))
-                time.sleep(sleep_duration)
-                if sleep_duration < 900:
-                    sleep_duration *= 2
+                self.time_to_sleep()
                 continue
             self.fileinfo['fname'] = file_sql[0]
             self.fileinfo['fpath'] = '\\' + file_sql[1]
             self.fileinfo['reportID'] = file_sql[2]
-            #start_update = time.time()
             # Calling function to work with Excel
             self.fileinfo['update_state'] = update_file(self.fileinfo['fpath'],
                                                          self.fileinfo['fname'])
-            #update_duration = time.time() - start_update
             self.fileinfo['update_time'] = time.strftime("%d-%m-%Y %H:%M:%S",
                                                          time.localtime())
             # Write in the db result of update
             self.db_update(dbconn)
             time.sleep(5)
-            sleep_duration = 30
+            self.sleep_duration = 30
         print('Exiting main cycle...')
 
 
@@ -76,6 +72,22 @@ class Main(object):
         # clear info about last file
         for key in self.fileinfo.keys():
             self.fileinfo[key] = None
+
+
+    def time_to_sleep(self):
+        ''' Sleep before next cycle.
+        '''
+        now = datetime.datetime.today()
+        if now.hour >= 19:  # sleep till 5 AM
+            wakeup = datetime.datetime(now.year, now.month, now.day, 5, 0)
+            wakeup += datetime.timedelta(days=1)
+            print('Sleep till 5 AM.')
+            time.sleep((wakeup-now).seconds)
+            return
+        print('No files to update. Waiting {} seconds.'.format(self.sleep_duration))
+        time.sleep(self.sleep_duration)
+        if self.sleep_duration < 900:
+            self.sleep_duration *= 2
 
 
 def control_thread():
