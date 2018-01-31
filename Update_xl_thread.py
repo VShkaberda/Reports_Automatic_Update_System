@@ -44,7 +44,7 @@ class Main(object):
             if file_sql is None:
                 print('No files to update. Waiting {} seconds.'.format(sleep_duration))
                 time.sleep(sleep_duration)
-                if sleep_duration < 3600:
+                if sleep_duration < 900:
                     sleep_duration *= 2
                 continue
             self.fileinfo['fname'] = file_sql[0]
