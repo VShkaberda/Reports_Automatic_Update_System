@@ -57,7 +57,7 @@ class DBConnect(object):
                 	and
                 	ScheduleTypeID = 0 --прямой график
                 	and
-                	convert(time,getdate()) >= timefrom  -- обновлять позже назначеного
+                	convert(time,getdate()) >= isnull(timefrom,'00:00')  -- обновлять позже назначеного
                 and isnull(Error, 0) != 1
                 order by [priority]''')
         return self.__cursor.fetchone()
