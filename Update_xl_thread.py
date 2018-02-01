@@ -8,7 +8,6 @@ from db_connect_sql import DBConnect
 from pyodbc import Error as SQLError
 from xl import update_file
 
-import datetime
 import threading
 import time
 
@@ -77,12 +76,11 @@ class Main(object):
     def time_to_sleep(self):
         ''' Sleep before next cycle.
         '''
-        now = datetime.datetime.today()
-        if now.hour >= 19:  # sleep till 5 AM
-            wakeup = datetime.datetime(now.year, now.month, now.day, 5, 0)
-            wakeup += datetime.timedelta(days=1)
-            print('Sleep till 5 AM.')
-            time.sleep((wakeup-now).seconds)
+        now = time.localtime()
+        if now.tm_hour >= 20 or now.tm_hour < 6:
+            print('{}. No files to update.'.format(time.strftime("%d-%m-%Y %H:%M:%S",
+                                                         now)))
+            time.sleep((3600).seconds)
             return
         print('No files to update. Waiting {} seconds.'.format(self.sleep_duration))
         time.sleep(self.sleep_duration)
