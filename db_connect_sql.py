@@ -27,7 +27,7 @@ class DBConnect(object):
         ''' Fetching one file to be updated next.
         '''
         self.__cursor.execute('''SELECT top 1 UploadFileName, FirstResourceLink, ReportID
-                  FROM [SILPOAnalitic].[dbo].[VV_Hermes_Reports_Temp]
+                  FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
                   where 1=1
                 	and
                 	((datepart(weekday,ExecutedJob) = iif(DAY1=1, 1, 0) AND
@@ -57,7 +57,7 @@ class DBConnect(object):
                 	and
                 	ScheduleTypeID = 0 --прямой график
                 	and
-                	convert(time,getdate()) >= timefrom  -- обновлять позже назначеного
+                	convert(time,getdate()) >= isnull(timefrom,'00:00')  -- обновлять позже назначеного
                 and isnull(Error, 0) != 1
                 order by [priority]''')
         return self.__cursor.fetchone()
@@ -66,7 +66,7 @@ class DBConnect(object):
         ''' Update data on server that file update was succeeded.
         '''
         print('Update succeeded! Loading data to server.')
-        self.__cursor.execute('UPDATE [SILPOAnalitic].[dbo].[VV_Hermes_Reports_Temp] \
+        self.__cursor.execute('UPDATE [SILPOAnalitic].[dbo].[Hermes_Reports] \
                               SET LastDateUpdate = cast(? as datetime) \
                               WHERE ReportID = ?', (update_time, rID))
         self.__db.commit()
@@ -75,7 +75,7 @@ class DBConnect(object):
         ''' Update data on server in case if update was failed.
         '''
         print('Update failed!')
-        self.__cursor.execute('UPDATE [SILPOAnalitic].[dbo].[VV_Hermes_Reports_Temp] \
+        self.__cursor.execute('UPDATE [SILPOAnalitic].[dbo].[Hermes_Reports] \
                               SET Error = 1, LastDateUpdate = cast(? as datetime) \
                               WHERE ReportID = ?', (update_time, rID))
         self.__db.commit()
