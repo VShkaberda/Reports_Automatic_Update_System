@@ -21,9 +21,9 @@ def update_file(root, f):
     ''' Function to refresh excel files and write in db that file was refreshed.
         Input: root - path of folder where file is;
             f - excel file name.
-        Return 1 if update was successful, otherwise 0.
+        Return 0 if update was successful, otherwise error number.
     '''
-    successful_update = 0
+    update_error = 1
     try:
         xl = win32com.client.DispatchEx("Excel.Application")
         xl.DisplayAlerts = False
@@ -38,7 +38,7 @@ def update_file(root, f):
 
         wb.Close(SaveChanges=1)
         print(f, " updated.")
-        successful_update = 1
+        update_error = 0
 
     except pythoncom.com_error as e:
         print( "Excel Error: %s" % str(e) )
@@ -46,6 +46,7 @@ def update_file(root, f):
     except ReadOnlyException as e:
         print( "ReadOnly Error: %s" % str(e) )
         print(e.message, e.f)
+        update_error = 3
 
     except Exception as e:
         print( "Common Error: %s" % str(e) )
@@ -53,7 +54,7 @@ def update_file(root, f):
 
     finally:
         xl.Quit()
-        return successful_update
+        return update_error
 
 if __name__ == '__main__':
     from os import getcwd

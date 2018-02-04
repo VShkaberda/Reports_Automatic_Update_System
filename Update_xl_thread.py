@@ -6,6 +6,7 @@ Created on Sun Jan  7 15:53:26 2018
 
 from db_connect_sql import DBConnect
 from pyodbc import Error as SQLError
+from send_mail import send_mail
 from xl import update_file
 
 import threading
@@ -17,6 +18,49 @@ class Main(object):
         # Info about last file
         self.fileinfo = fileinfo
         self.sleep_duration = 30 # if no files to update
+
+
+    def db_update(self, dbconn):
+        ''' Function loads info about file update to db.
+        '''
+        if self.fileinfo['update_error'] == 0:
+            dbconn.successful_update(self.fileinfo['reportID'],
+                                     self.fileinfo['update_time'])
+        else:
+            dbconn.failed_update(self.fileinfo['reportID'],
+                                 self.fileinfo['update_time'],
+                                 self.fileinfo['update_error'])
+        # clear info about last file
+        for key in self.fileinfo.keys():
+            self.fileinfo[key] = None
+
+
+    def parse_SQL(self, file_sql):
+        ''' Turns result from SQL query into a dictionary.
+        '''
+        self.fileinfo['fname'] = file_sql[0]
+        self.fileinfo['fpath'] = '\\' + file_sql[1]
+        self.fileinfo['reportID'] = file_sql[2]
+        self.fileinfo['Notifications'] = file_sql[3]
+        self.fileinfo['Attachments'] = '\\' + file_sql[4]
+        self.fileinfo['NotificationsWhom'] = file_sql[5]
+        self.fileinfo['NotificationsCopy'] = file_sql[6]
+        self.fileinfo['Notificationstext'] = file_sql[7]
+
+
+    def time_to_sleep(self):
+        ''' Sleep before next cycle.
+        '''
+        now = time.localtime()
+        if now.tm_hour >= 20 or now.tm_hour < 6:
+            print('{}. No files to update.'.format(time.strftime("%d-%m-%Y %H:%M:%S",
+                                                         now)))
+            time.sleep((3600).seconds)
+            return
+        print('No files to update. Waiting {} seconds.'.format(self.sleep_duration))
+        time.sleep(self.sleep_duration)
+        if self.sleep_duration < 900:
+            self.sleep_duration *= 2
 
 
     def run(self):
@@ -44,48 +88,26 @@ class Main(object):
             if file_sql is None:
                 self.time_to_sleep()
                 continue
-            self.fileinfo['fname'] = file_sql[0]
-            self.fileinfo['fpath'] = '\\' + file_sql[1]
-            self.fileinfo['reportID'] = file_sql[2]
+            self.parse_SQL(file_sql)
             # Calling function to work with Excel
-            self.fileinfo['update_state'] = update_file(self.fileinfo['fpath'],
+            self.fileinfo['update_error'] = update_file(self.fileinfo['fpath'],
                                                          self.fileinfo['fname'])
             self.fileinfo['update_time'] = time.strftime("%d-%m-%Y %H:%M:%S",
                                                          time.localtime())
+            # Send mail
+            if self.fileinfo['update_error'] == 0 and self.fileinfo['Notifications']:
+                att = self.fileinfo['fname'] if self.fileinfo['Attachments'] else None
+                self.fileinfo['update_error'] = send_mail(
+                              to=self.fileinfo['NotificationsWhom'],
+                              copy=self.fileinfo['NotificationsCopy'],
+                              HTMLBody=self.fileinfo['Notificationstext'],
+                              att=att
+                              )
             # Write in the db result of update
             self.db_update(dbconn)
             time.sleep(5)
             self.sleep_duration = 30
         print('Exiting main cycle...')
-
-
-    def db_update(self, dbconn):
-        ''' Function loads info about file update to db.
-        '''
-        if self.fileinfo['update_state']:
-            dbconn.successful_update(self.fileinfo['reportID'],
-                                     self.fileinfo['update_time'])
-        else:
-            dbconn.failed_update(self.fileinfo['reportID'],
-                                 self.fileinfo['update_time'])
-        # clear info about last file
-        for key in self.fileinfo.keys():
-            self.fileinfo[key] = None
-
-
-    def time_to_sleep(self):
-        ''' Sleep before next cycle.
-        '''
-        now = time.localtime()
-        if now.tm_hour >= 20 or now.tm_hour < 6:
-            print('{}. No files to update.'.format(time.strftime("%d-%m-%Y %H:%M:%S",
-                                                         now)))
-            time.sleep((3600).seconds)
-            return
-        print('No files to update. Waiting {} seconds.'.format(self.sleep_duration))
-        time.sleep(self.sleep_duration)
-        if self.sleep_duration < 900:
-            self.sleep_duration *= 2
 
 
 def control_thread():
@@ -113,8 +135,13 @@ if __name__ == "__main__":
     FileInfo = {'fname': None,
                 'fpath': None,
                 'reportID': None,
-                'update_state': None,
-                'update_time': None}
+                'update_error': None,
+                'update_time': None,
+                'Notifications': None,
+                'Attachments': None,
+                'NotificationsWhom': None,
+                'NotificationsCopy': None,
+                'Notificationstext': None}
     main = Main(FileInfo)
     while connection_retry[0] < 3 and thread.is_alive():
         try:

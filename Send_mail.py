@@ -7,23 +7,31 @@ import sys
 import win32com.client as win32
 
 def send_mail(*, to='Фоззи|Логистика|Аналитики', copy=None, subject='Без темы',
-              body=None, HTMLBody=None, att=None):
+              body='', HTMLBody=None, att=None):
     ''' Function takes a list of named arguments and sends an e-mail
         via local Outlook account.
+        Return 0 if no errors occured, otherwise error number.
     '''
-    outlook = win32.Dispatch('outlook.application')
-    mail = outlook.CreateItem(0)
-    mail.To = to
-    if copy:
-        mail.CC = copy
-    mail.Subject = subject
-    mail.Body = body
-    if HTMLBody:
-        mail.HTMLBody = HTMLBody
-    # In case you want to attach a file to the email
-    if att:
-        mail.Attachments.Add(att)
-    mail.Send()
+    errorID = 0
+    try:
+        outlook = win32.Dispatch('outlook.application')
+        mail = outlook.CreateItem(0)
+        mail.To = to
+        if copy:
+            mail.CC = copy
+        mail.Subject = subject
+        mail.Body = body
+        if HTMLBody:
+            mail.HTMLBody = HTMLBody
+        # In case you want to attach a file to the email
+        if att:
+            mail.Attachments.Add(att)
+        mail.Send()
+    except Exception as e:
+        print( "Common Error: %s" % str(e) )
+        print(e)
+        errorID = 6
+    return errorID
 
 
 if __name__ == '__main__':
@@ -35,11 +43,13 @@ if __name__ == '__main__':
         sys.exit(1)
     to = input('Mail To (If None will use logist-analytics):')
     copy = input('Mail Copy:')
+    subject = input('Subject:')
+    body = input('Body:')
     if mode == '2':
         from os import path, getcwd
         root = getcwd()
         att = input('Attachment file name:')
         att  = path.join(root, att)
-        send_mail(to, copy, att)
+        send_mail(to=to, copy=copy, subject=subject, body=body, att=att)
     else:
-        send_mail(to, copy)
+        send_mail(to=to, copy=copy, subject=subject, body=body)
