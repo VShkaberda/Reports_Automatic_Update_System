@@ -5,6 +5,7 @@ Created on Sun Jan  7 15:53:26 2018
 """
 
 from db_connect_sql import DBConnect
+from os import path
 from pyodbc import Error as SQLError
 from send_mail import send_mail
 from xl import update_file
@@ -42,7 +43,7 @@ class Main(object):
         self.fileinfo['fpath'] = '\\' + file_sql[1]
         self.fileinfo['reportID'] = file_sql[2]
         self.fileinfo['Notifications'] = file_sql[3]
-        self.fileinfo['Attachments'] = '\\' + file_sql[4]
+        self.fileinfo['Attachments'] = file_sql[4]
         self.fileinfo['NotificationsWhom'] = file_sql[5]
         self.fileinfo['NotificationsCopy'] = file_sql[6]
         self.fileinfo['Notificationstext'] = file_sql[7]
@@ -70,7 +71,7 @@ class Main(object):
         with DBConnect() as dbconn:
             # if info wasn't written to db after last file update
             if self.fileinfo['fname']:
-                self.db_update()
+                self.db_update(dbconn)
             # run main cycle
             self.main_cycle(dbconn)
         print('Exiting run...')
@@ -96,10 +97,15 @@ class Main(object):
                                                          time.localtime())
             # Send mail
             if self.fileinfo['update_error'] == 0 and self.fileinfo['Notifications']:
-                att = self.fileinfo['fname'] if self.fileinfo['Attachments'] else None
+                # create path to attachment
+                att = path.join(self.fileinfo['fpath'], self.fileinfo['fname']) \
+                    if self.fileinfo['Attachments'] else None
+                subj = '(Автоотчет) ' +  self.fileinfo['fname'] + \
+                    self.fileinfo['update_time'][:10] # just date
                 self.fileinfo['update_error'] = send_mail(
                               to=self.fileinfo['NotificationsWhom'],
                               copy=self.fileinfo['NotificationsCopy'],
+                              subject=subj,
                               HTMLBody=self.fileinfo['Notificationstext'],
                               att=att
                               )

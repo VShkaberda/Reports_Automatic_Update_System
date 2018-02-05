@@ -59,7 +59,7 @@ class DBConnect(object):
                 	ScheduleTypeID = 0 --прямой график
                 	and
                 	convert(time,getdate()) >= isnull(timefrom,'00:00')  -- обновлять позже назначеного
-                and isnull(Error, 0) == 0
+                and isnull(Error, 0) = 0
                 order by [priority]''')
         return self.__cursor.fetchone()
 
