@@ -42,11 +42,12 @@ class Main(object):
         self.fileinfo['fname'] = file_sql[0]
         self.fileinfo['fpath'] = '\\' + file_sql[1]
         self.fileinfo['reportID'] = file_sql[2]
-        self.fileinfo['Notifications'] = file_sql[3]
-        self.fileinfo['Attachments'] = file_sql[4]
-        self.fileinfo['NotificationsWhom'] = file_sql[5]
-        self.fileinfo['NotificationsCopy'] = file_sql[6]
-        self.fileinfo['Notificationstext'] = file_sql[7]
+        self.fileinfo['reportName'] = file_sql[3]
+        self.fileinfo['Notifications'] = file_sql[4]
+        self.fileinfo['Attachments'] = file_sql[5]
+        self.fileinfo['NotificationsWhom'] = file_sql[6]
+        self.fileinfo['NotificationsCopy'] = file_sql[7]
+        self.fileinfo['Notificationstext'] = file_sql[8]
 
 
     def time_to_sleep(self):
@@ -54,11 +55,12 @@ class Main(object):
         '''
         now = time.localtime()
         if now.tm_hour >= 20 or now.tm_hour < 6:
-            print('{}. No files to update.'.format(time.strftime("%d-%m-%Y %H:%M:%S",
-                                                         now)))
-            time.sleep((3600).seconds)
+            print('{}. No files to update.'
+                  .format(time.strftime("%d-%m-%Y %H:%M:%S", now)))
+            time.sleep(3600)
             return
-        print('No files to update. Waiting {} seconds.'.format(self.sleep_duration))
+        print('{}. No files to update. Waiting {} seconds.'
+              .format(time.strftime("%d-%m-%Y %H:%M:%S", now), self.sleep_duration))
         time.sleep(self.sleep_duration)
         if self.sleep_duration < 900:
             self.sleep_duration *= 2
@@ -96,12 +98,12 @@ class Main(object):
             self.fileinfo['update_time'] = time.strftime("%d-%m-%Y %H:%M:%S",
                                                          time.localtime())
             # Send mail
-            if self.fileinfo['update_error'] == 0 and self.fileinfo['Notifications']:
+            if self.fileinfo['update_error'] == 0 and self.fileinfo['Notifications'] == 1:
                 # create path to attachment
                 att = path.join(self.fileinfo['fpath'], self.fileinfo['fname']) \
                     if self.fileinfo['Attachments'] else None
-                subj = '(Автоотчет) ' +  self.fileinfo['fname'] + \
-                    self.fileinfo['update_time'][:10] # just date
+                subj = '(Автоотчет) ' +  self.fileinfo['reportName'] + ' (' + \
+                    self.fileinfo['update_time'][:10] + ')' # date in brackets
                 self.fileinfo['update_error'] = send_mail(
                               to=self.fileinfo['NotificationsWhom'],
                               copy=self.fileinfo['NotificationsCopy'],
@@ -141,6 +143,7 @@ if __name__ == "__main__":
     FileInfo = {'fname': None,
                 'fpath': None,
                 'reportID': None,
+                'reportName': None,
                 'update_error': None,
                 'update_time': None,
                 'Notifications': None,

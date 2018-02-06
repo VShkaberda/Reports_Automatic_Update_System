@@ -26,7 +26,7 @@ class DBConnect(object):
     def file_to_update(self):
         ''' Fetching one file to be updated next.
         '''
-        self.__cursor.execute('''SELECT top 1 UploadFileName, FirstResourceLink, ReportID,
+        self.__cursor.execute('''SELECT top 1 UploadFileName, FirstResourceLink, ReportID, ReportName,
                 Notifications, Attachments, NotificationsWhom, NotificationsCopy, Notificationstext
                   FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
                   where 1=1
@@ -58,7 +58,7 @@ class DBConnect(object):
                 	and
                 	ScheduleTypeID = 0 --прямой график
                 	and
-                	convert(time,getdate()) >= isnull(timefrom,'00:00')  -- обновлять позже назначеного
+                	convert(time,getdate()) >= isnull(timefrom,'00:00')  -- обновлять позже назначенного
                 and isnull(Error, 0) = 0
                 order by [priority]''')
         return self.__cursor.fetchone()
