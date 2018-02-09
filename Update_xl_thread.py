@@ -8,7 +8,7 @@ from db_connect_sql import DBConnect
 from os import path
 from pyodbc import Error as SQLError
 from send_mail import send_mail
-from xl import update_file
+from xl import copy_file, update_file
 
 import threading
 import time
@@ -48,6 +48,7 @@ class Main(object):
         self.fileinfo['NotificationsWhom'] = file_sql[6]
         self.fileinfo['NotificationsCopy'] = file_sql[7]
         self.fileinfo['Notificationstext'] = file_sql[8]
+        self.fileinfo['SecondResourceLink'] = '\\' + file_sql[9]
 
 
     def time_to_sleep(self):
@@ -97,6 +98,11 @@ class Main(object):
                                                          self.fileinfo['fname'])
             self.fileinfo['update_time'] = time.strftime("%d-%m-%Y %H:%M:%S",
                                                          time.localtime())
+            # Copy file
+            if self.fileinfo['update_error'] == 0 and self.fileinfo['SecondResourceLink']:
+                self.fileinfo['update_error'] = copy_file(self.fileinfo['fpath'],
+                                                          self.fileinfo['fname'],
+                                                          self.fileinfo['SecondResourceLink'])
             # Send mail
             if self.fileinfo['update_error'] == 0 and self.fileinfo['Notifications'] == 1:
                 # create path to attachment
@@ -150,7 +156,8 @@ if __name__ == "__main__":
                 'Attachments': None,
                 'NotificationsWhom': None,
                 'NotificationsCopy': None,
-                'Notificationstext': None}
+                'Notificationstext': None,
+                'SecondResourceLink': None}
     main = Main(FileInfo)
     while connection_retry[0] < 3 and thread.is_alive():
         try:
