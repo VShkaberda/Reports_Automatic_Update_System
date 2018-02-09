@@ -27,7 +27,7 @@ class DBConnect(object):
         ''' Fetching one file to be updated next.
         '''
         self.__cursor.execute('''SELECT top 1 UploadFileName, FirstResourceLink, ReportID, ReportName,
-                Notifications, Attachments, NotificationsWhom, NotificationsCopy, Notificationstext
+            Notifications, Attachments, NotificationsWhom, NotificationsCopy, Notificationstext, SecondResourceLink
                   FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
                   where 1=1
                 	and
