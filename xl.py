@@ -4,7 +4,6 @@ Created on Sun Jan  7 16:23:59 2018
 @author: Vadim Shkaberda
 """
 from os import path
-from shutil import copy2
 
 import pythoncom
 import win32com.client
@@ -22,7 +21,7 @@ def update_file(root, f):
     ''' Function to refresh excel files and write in db that file was refreshed.
         Input: root - path of folder where file is;
             f - excel file name.
-        Return 1 if update was successful, otherwise error number.
+        Return 0 if update was successful, otherwise error number.
     '''
     update_error = 1
     try:
@@ -56,27 +55,6 @@ def update_file(root, f):
     finally:
         xl.Quit()
         return update_error
-
-    
-def copy_file(root, f, dst):
-    ''' Copy file f to dst.
-        Input: root - path of folder where file is;
-            f - excel file name;
-            dst - destination (either folder or filename).
-        Return 1 if copy was successful, otherwise error number.
-    '''
-    update_error = 1
-    try:
-        copy2(path.join(root, f), dst)
-        
-    except Exception as e:
-        print( "Error while copying: %s" % str(e) )
-        print(e)
-        update_error = 5
-    
-    finally:
-        return update_error
-
 
 if __name__ == '__main__':
     from os import getcwd
