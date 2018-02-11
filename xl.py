@@ -4,6 +4,7 @@ Created on Sun Jan  7 16:23:59 2018
 @author: Vadim Shkaberda
 """
 from os import path
+from shutil import copy2
 
 import pythoncom
 import win32com.client
@@ -55,6 +56,27 @@ def update_file(root, f):
     finally:
         xl.Quit()
         return update_error
+
+
+def copy_file(root, f, dst):
+    ''' Copy file f to dst.
+        Input: root - path of folder where file is;
+            f - excel file name;
+            dst - destination (either folder or filename).
+        Return 0 if copy was successful, otherwise error number.
+    '''
+    update_error = 0
+    try:
+        copy2(path.join(root, f), dst)
+        
+    except Exception as e:
+        print( "Error while copying: %s" % str(e) )
+        print(e)
+        update_error = 5
+    
+    finally:
+        return update_error
+
 
 if __name__ == '__main__':
     from os import getcwd
