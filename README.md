@@ -25,6 +25,8 @@ Uses methods:
 
 `file_to_update`() - returns info about file from db.
 
+`group_mail_check`(<i>groupname</i>) - returns 1 if all files from group <i>groupname</i> have been updated.
+
 `successful_update`(<i>rID, update_time</i>) - writes <i>update_time</i> into field [LastDateUpdate] for row with [ReportID] = <i>rID</i> into db.
 
 `failed_update`(<i>rID, update_time, update_error</i>) - writes <i>update_error</i> into field [Error] and <i>update_time</i> into field [LastDateUpdate] for row with [ReportID] = <i>rID</i> to db.
@@ -44,3 +46,5 @@ Module to work with Excel.
 class `ReadOnlyException`() - class for catching read-only state of Excel files.
 
 function `update_file`(<i>root, f</i>) - updates Excel file <i>f</i>. <i>root</i> - path to file.
+
+function `cop_file`(<i>root, f, dst</i>) - copy file <i>f</i> to destination <i>dst</i>, where <i>dst</i> - either folder or filename.

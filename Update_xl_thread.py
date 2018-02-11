@@ -49,6 +49,7 @@ class Main(object):
         self.fileinfo['NotificationsCopy'] = file_sql[7]
         self.fileinfo['Notificationstext'] = file_sql[8]
         self.fileinfo['SecondResourceLink'] = '\\' + file_sql[9]
+        self.fileinfo['GroupName'] = file_sql[10]
 
 
     def time_to_sleep(self):
@@ -105,18 +106,22 @@ class Main(object):
                                                           self.fileinfo['SecondResourceLink'])
             # Send mail
             if self.fileinfo['update_error'] == 0 and self.fileinfo['Notifications'] == 1:
-                # create path to attachment
-                att = path.join(self.fileinfo['fpath'], self.fileinfo['fname']) \
-                    if self.fileinfo['Attachments'] else None
-                subj = '(Автоотчет) ' +  self.fileinfo['reportName'] + ' (' + \
-                    self.fileinfo['update_time'][:10] + ')' # date in brackets
-                self.fileinfo['update_error'] = send_mail(
-                              to=self.fileinfo['NotificationsWhom'],
-                              copy=self.fileinfo['NotificationsCopy'],
-                              subject=subj,
-                              HTMLBody=self.fileinfo['Notificationstext'],
-                              att=att
-                              )
+                # if we have no group - send mail
+                # if we have GroupName - send mail if group_mail_check == 1
+                if self.fileinfo['GroupName'] == '' \
+                or dbconn.group_mail_check(self.fileinfo['GroupName']):
+                    # create path to attachment
+                    att = path.join(self.fileinfo['fpath'], self.fileinfo['fname']) \
+                        if self.fileinfo['Attachments'] else None
+                    subj = '(Автоотчет) ' +  self.fileinfo['reportName'] + ' (' + \
+                        self.fileinfo['update_time'][:10] + ')' # date in brackets
+                    self.fileinfo['update_error'] = send_mail(
+                                  to=self.fileinfo['NotificationsWhom'],
+                                  copy=self.fileinfo['NotificationsCopy'],
+                                  subject=subj,
+                                  HTMLBody=self.fileinfo['Notificationstext'],
+                                  att=att
+                                  )
             # Write in the db result of update
             self.db_update(dbconn)
             time.sleep(5)
@@ -157,7 +162,8 @@ if __name__ == "__main__":
                 'NotificationsWhom': None,
                 'NotificationsCopy': None,
                 'Notificationstext': None,
-                'SecondResourceLink': None}
+                'SecondResourceLink': None,
+                'GroupName': None}
     main = Main(FileInfo)
     while connection_retry[0] < 3 and thread.is_alive():
         try:
