@@ -40,7 +40,7 @@ class Main(object):
         ''' Turns result from SQL query into a dictionary.
         '''
         self.fileinfo['fname'] = file_sql[0]
-        self.fileinfo['fpath'] = '\\' + file_sql[1]
+        self.fileinfo['fpath'] = file_sql[1]
         self.fileinfo['reportID'] = file_sql[2]
         self.fileinfo['reportName'] = file_sql[3]
         self.fileinfo['Notifications'] = file_sql[4]
@@ -48,7 +48,7 @@ class Main(object):
         self.fileinfo['NotificationsWhom'] = file_sql[6]
         self.fileinfo['NotificationsCopy'] = file_sql[7]
         self.fileinfo['Notificationstext'] = file_sql[8]
-        self.fileinfo['SecondResourceLink'] = '\\' + file_sql[9]
+        self.fileinfo['SecondResourceLink'] = file_sql[9]
         self.fileinfo['GroupName'] = file_sql[10]
 
 
@@ -95,7 +95,7 @@ class Main(object):
                 continue
             self.parse_SQL(file_sql)
             # Calling function to work with Excel
-            self.fileinfo['update_error'] = update_file(self.fileinfo['fpath'],
+            self.fileinfo['update_error'] = update_file('\\' + self.fileinfo['fpath'],
                                                          self.fileinfo['fname'])
             self.fileinfo['update_time'] = time.strftime("%d-%m-%Y %H:%M:%S",
                                                          time.localtime())
@@ -111,7 +111,7 @@ class Main(object):
                 if self.fileinfo['GroupName'] == '' \
                 or dbconn.group_mail_check(self.fileinfo['GroupName']):
                     # create path to attachment
-                    att = path.join(self.fileinfo['fpath'], self.fileinfo['fname']) \
+                    att = path.join('\\' + self.fileinfo['fpath'], self.fileinfo['fname']) \
                         if self.fileinfo['Attachments'] else None
                     subj = '(Автоотчет) ' +  self.fileinfo['reportName'] + ' (' + \
                         self.fileinfo['update_time'][:10] + ')' # date in brackets

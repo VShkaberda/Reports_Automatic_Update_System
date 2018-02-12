@@ -68,7 +68,8 @@ class DBConnect(object):
         ''' Return 1 if all files from group have been updated.
         '''
         self.__cursor.execute('''SELECT count(*) as Group_count,
-                              sum(case when Error = 0 then 1 else 0 end) as Updated
+                 sum(case when Error = 0 AND LastDateUpdate > ExecutedJob
+                     then 1 else 0 end) as Updated
                   FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
                   where 1=1
                 	and
