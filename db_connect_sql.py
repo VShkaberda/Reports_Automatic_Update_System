@@ -69,7 +69,7 @@ class DBConnect(object):
         '''
         self.__cursor.execute('''SELECT count(*) as Group_count,
                  sum(case when Error = 0 AND LastDateUpdate > ExecutedJob
-                     then 1 else 0 end) as Updated
+                     then 1 else 0 end) + 1 as Updated
                   FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
                   where 1=1
                 	and
