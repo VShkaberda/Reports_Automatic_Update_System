@@ -118,7 +118,7 @@ class DBConnect(object):
     def failed_update(self, rID, update_time, update_error):
         ''' Update data on server in case if update was failed.
         '''
-        print('Update failed!')
+        print('Update failed! Error number: {}.'.format(update_error))
         self.__cursor.execute('UPDATE [SILPOAnalitic].[dbo].[Hermes_Reports] \
                               SET Error = ?, LastDateUpdate = cast(? as datetime) \
                               WHERE ReportID = ?', (update_error, update_time, rID))

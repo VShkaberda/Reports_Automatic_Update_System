@@ -36,6 +36,22 @@ class Main(object):
             self.fileinfo[key] = None
 
 
+    def email_gen(self):
+        ''' Returns a dictionary with keywords for mail.
+        '''
+        return {'to': self.fileinfo['NotificationsWhom'],
+                'copy': self.fileinfo['NotificationsCopy'],
+                'subj': '(Автоотчет) ' +  \
+                # choose Group- or reportName
+                (self.fileinfo['GroupName'] or self.fileinfo['reportName']) + \
+                ' (' + self.fileinfo['update_time'][:10] + ')', # date in brackets
+                'HTMLBody': self.fileinfo['Notificationstext'],
+                # create path to attachment
+                'att': path.join('\\' + self.fileinfo['fpath'], self.fileinfo['fname']) \
+                        if self.fileinfo['Attachments'] else None
+                }
+
+
     def parse_SQL(self, file_sql):
         ''' Turns result from SQL query into a dictionary.
         '''
@@ -67,6 +83,7 @@ class Main(object):
         if self.sleep_duration < 900:
             self.sleep_duration *= 2
 
+    ##### Working cycles. #####
 
     def run(self):
         ''' Init cycle. Connects to database. Writes info about the last file
@@ -110,18 +127,7 @@ class Main(object):
                 # if we have GroupName - send mail if group_mail_check == 1
                 if self.fileinfo['GroupName'] == '' \
                 or dbconn.group_mail_check(self.fileinfo['GroupName']):
-                    # create path to attachment
-                    att = path.join('\\' + self.fileinfo['fpath'], self.fileinfo['fname']) \
-                        if self.fileinfo['Attachments'] else None
-                    subj = '(Автоотчет) ' +  self.fileinfo['reportName'] + ' (' + \
-                        self.fileinfo['update_time'][:10] + ')' # date in brackets
-                    self.fileinfo['update_error'] = send_mail(
-                                  to=self.fileinfo['NotificationsWhom'],
-                                  copy=self.fileinfo['NotificationsCopy'],
-                                  subject=subj,
-                                  HTMLBody=self.fileinfo['Notificationstext'],
-                                  att=att
-                                  )
+                    self.fileinfo['update_error'] = send_mail(**self.email_gen())
             # Write in the db result of update
             self.db_update(dbconn)
             time.sleep(5)

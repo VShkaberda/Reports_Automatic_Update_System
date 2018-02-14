@@ -26,6 +26,7 @@ def update_file(root, f):
     '''
     update_error = 1
     try:
+        print("Updating ", f)
         xl = win32com.client.DispatchEx("Excel.Application")
         xl.DisplayAlerts = False
 
@@ -38,7 +39,6 @@ def update_file(root, f):
         xl.Application.Run('\'' + f + '\'!Update')
 
         wb.Close(SaveChanges=1)
-        print(f, " updated.")
         update_error = 0
 
     except pythoncom.com_error as e:
@@ -68,12 +68,12 @@ def copy_file(root, f, dst):
     update_error = 0
     try:
         copy2(path.join(root, f), dst)
-        
+
     except Exception as e:
         print( "Error while copying: %s" % str(e) )
         print(e)
         update_error = 5
-    
+
     finally:
         return update_error
 
