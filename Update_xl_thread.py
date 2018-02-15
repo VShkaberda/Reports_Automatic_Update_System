@@ -41,7 +41,7 @@ class Main(object):
         '''
         return {'to': self.fileinfo['NotificationsWhom'],
                 'copy': self.fileinfo['NotificationsCopy'],
-                'subj': '(Автоотчет) ' +  \
+                'subject': '(Автоотчет) ' +  \
                 # choose Group- or reportName
                 (self.fileinfo['GroupName'] or self.fileinfo['reportName']) + \
                 ' (' + self.fileinfo['update_time'][:10] + ')', # date in brackets
@@ -112,6 +112,7 @@ class Main(object):
                 continue
             self.parse_SQL(file_sql)
             # Calling function to work with Excel
+            print('{}'.format(time.strftime("%d-%m-%Y %H:%M:%S", time.localtime())), end=' ')
             self.fileinfo['update_error'] = update_file('\\' + self.fileinfo['fpath'],
                                                          self.fileinfo['fname'])
             self.fileinfo['update_time'] = time.strftime("%d-%m-%Y %H:%M:%S",
