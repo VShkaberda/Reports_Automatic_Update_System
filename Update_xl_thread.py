@@ -28,6 +28,8 @@ class Main(object):
             dbconn.successful_update(self.fileinfo['reportID'],
                                      self.fileinfo['update_time'])
         else:
+            send_mail(subject='(Ошибка обновления) ' + self.fileinfo['reportName'],
+                      body='ID ошибки: ' + str(self.fileinfo['update_error']))
             dbconn.failed_update(self.fileinfo['reportID'],
                                  self.fileinfo['update_time'],
                                  self.fileinfo['update_error'])
