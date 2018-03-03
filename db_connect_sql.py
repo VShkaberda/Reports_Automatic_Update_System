@@ -65,26 +65,17 @@ class DBConnect(object):
                   FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
                   where 1=1
                 	and
-                	((datepart(weekday,ExecutedJob) = iif(DAY1=1, 1, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY2=1, 2, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY3=1, 3, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY4=1, 4, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY5=1, 5, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY6=1, 6, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY7=1, 7, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate())))
+                	datepart(weekday, ExecutedJob) =  datepart(weekday, getdate())
+                    AND -- instead of bit mask
+                        (
+                         (iif(DAY1=1, '1', '') +
+                         iif(DAY2=1, '2', '') +
+                         iif(DAY3=1, '3', '') +
+                         iif(DAY4=1, '4', '') +
+                         iif(DAY5=1, '5', '') +
+                         iif(DAY6=1, '6', '') +
+                         iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
+                        )
                 	AND
                 	StatusID = 1 --рабочий
                 	and
