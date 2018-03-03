@@ -82,7 +82,7 @@ class Main(object):
         print('{}. No files to update. Waiting {} seconds.'
               .format(time.strftime("%d-%m-%Y %H:%M:%S", now), self.sleep_duration))
         time.sleep(self.sleep_duration)
-        if self.sleep_duration < 900:
+        if self.sleep_duration < 450:
             self.sleep_duration *= 2
 
     ##### Working cycles. #####
@@ -133,7 +133,7 @@ class Main(object):
                     self.fileinfo['update_error'] = send_mail(**self.email_gen())
             # Write in the db result of update
             self.db_update(dbconn)
-            time.sleep(5)
+            time.sleep(3)
             self.sleep_duration = 30
         print('Exiting main cycle...')
 
