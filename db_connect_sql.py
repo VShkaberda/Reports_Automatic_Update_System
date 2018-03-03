@@ -29,39 +29,31 @@ class DBConnect(object):
         self.__cursor.execute('''SELECT top 1 UploadFileName, FirstResourceLink, ReportID, ReportName,
             Notifications, Attachments, NotificationsWhom, NotificationsCopy, Notificationstext,
             SecondResourceLink, GroupName
-                  FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
-                  where 1=1
-                	and
-                	((datepart(weekday,ExecutedJob) = iif(DAY1=1, 1, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY2=1, 2, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY3=1, 3, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY4=1, 4, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY5=1, 5, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY6=1, 6, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate()))
-                	OR
-                	(datepart(weekday,ExecutedJob) = iif(DAY7=1, 7, 0) AND
-                    datepart(weekday,ExecutedJob) =  datepart(weekday, getdate())))
-                	AND
-                	ExecutedJob > ISNULL(LastDateUpdate, 0)
-                	and
-                	StatusID = 1 --рабочий
-                	and
-                	ScheduleTypeID = 0 --прямой график
-                	and
-                	convert(time,getdate()) >= isnull(timefrom,'00:00')  -- обновлять позже назначенного
-                and isnull(Error, 0) = 0
-                order by [priority]''')
+                FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
+                WHERE 1=1
+                    AND
+                    (ScheduleTypeID = 2 -- monthly
+                    OR
+                        (datepart(weekday, ExecutedJob) =  datepart(weekday, getdate())
+                        AND -- instead of bit mask
+                            (
+                             (iif(DAY1=1, '1', '') +
+                             iif(DAY2=1, '2', '') +
+                             iif(DAY3=1, '3', '') +
+                             iif(DAY4=1, '4', '') +
+                             iif(DAY5=1, '5', '') +
+                             iif(DAY6=1, '6', '') +
+                             iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
+                            )
+                        AND
+                        ScheduleTypeID = 0 -- direct schedule
+                        )
+                    )
+                    AND ExecutedJob > ISNULL(LastDateUpdate, 0) -- didn't refresh after last job
+                    AND StatusID = 1 -- working
+                    AND convert(time, getdate()) >= isnull(timefrom, '00:00') -- refresh later timefrom
+                    AND isnull(Error, 0) = 0 -- don't try to refresh report with error
+                ORDER BY [priority]''')
         return self.__cursor.fetchone()
 
     def group_mail_check(self, groupname):
