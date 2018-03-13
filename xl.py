@@ -43,6 +43,8 @@ def update_file(root, f):
 
     except pythoncom.com_error as e:
         print( "Excel Error: %s" % str(e) )
+        if e.excepinfo[2].find('Не удается выполнить макрос', 0, 27) == 0:
+            update_error = 2
 
     except ReadOnlyException as e:
         print( "ReadOnly Error: %s" % str(e) )
