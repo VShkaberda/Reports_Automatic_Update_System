@@ -48,3 +48,9 @@ class `ReadOnlyException`() - class for catching read-only state of Excel files.
 function `update_file`(<i>root, f</i>) - updates Excel file <i>f</i>. <i>root</i> - path to file.
 
 function `cop_file`(<i>root, f, dst</i>) - copy file <i>f</i> to destination <i>dst</i>, where <i>dst</i> - either folder or filename.
+
+<hr>
+
+`Upd.manifest` - added to prevent admin privileges requirements after converting module into executable file. Tested on system with <i>x86</i> processor Architecture and 32-bit Python with Pyinstaller. 
+
+Usage: `pyinstaller -m Upd.manifest Update_xl_thread.py`
