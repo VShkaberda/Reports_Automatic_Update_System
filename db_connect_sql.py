@@ -19,9 +19,11 @@ class DBConnect(object):
         self.__db = pyodbc.connect(conn_str)
         self.__cursor = self.__db.cursor()
         return self
+    
 
     def __exit__(self, type, value, traceback):
         self.__db.close()
+        
 
     def file_to_update(self):
         ''' Fetching one file to be updated next.
@@ -55,16 +57,15 @@ class DBConnect(object):
                     AND isnull(Error, 0) = 0 -- don't try to refresh report with error
                 ORDER BY [priority]''')
         return self.__cursor.fetchone()
-
-    def group_mail_check(self, groupname):
-        ''' Return 1 if all files from group have been updated.
+    
+    
+    def group_attachments(self, groupname):
+        ''' Generator of attachments for email after updating all of group reports.
         '''
-        self.__cursor.execute('''SELECT count(*) as Group_count,
-                 sum(case when Error = 0 AND LastDateUpdate > ExecutedJob
-                     then 1 else 0 end) + 1 as Updated
+        self.__cursor.execute('''SELECT FirstResourceLink, UploadFileName
                   FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
                   where 1=1
-                	and
+                	AND
                 	datepart(weekday, ExecutedJob) =  datepart(weekday, getdate())
                     AND -- instead of bit mask
                         (
@@ -76,18 +77,48 @@ class DBConnect(object):
                          iif(DAY6=1, '6', '') +
                          iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
                         )
+                	AND StatusID = 1
+                	AND ScheduleTypeID = 0
+                	AND convert(time,getdate()) >= isnull(timefrom,'00:00')
+                 AND Attachments = 1
+                 AND GroupName = ?
+                ''', (groupname))
+        for row in self.__cursor.fetchall():
+            if not row:
+                break
+            yield row
+                         
+
+    def group_mail_check(self, groupname):
+        ''' Return 1 if all files from group have been updated.
+        '''
+        self.__cursor.execute('''SELECT count(*) as Group_count,
+                 sum(case when Error = 0 AND LastDateUpdate > ExecutedJob
+                     then 1 else 0 end) + 1 as Updated
+                  FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
+                  where 1=1
                 	AND
-                	StatusID = 1 --рабочий
-                	and
-                	ScheduleTypeID = 0 --прямой график
-                	and
-                	convert(time,getdate()) >= isnull(timefrom,'00:00')  -- обновлять позже назначенного
-                 and GroupName = ?
+                	datepart(weekday, ExecutedJob) =  datepart(weekday, getdate())
+                    AND -- instead of bit mask
+                        (
+                         (iif(DAY1=1, '1', '') +
+                         iif(DAY2=1, '2', '') +
+                         iif(DAY3=1, '3', '') +
+                         iif(DAY4=1, '4', '') +
+                         iif(DAY5=1, '5', '') +
+                         iif(DAY6=1, '6', '') +
+                         iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
+                        )
+                	AND StatusID = 1
+                	AND ScheduleTypeID = 0
+                	AND convert(time,getdate()) >= isnull(timefrom,'00:00')
+                 AND GroupName = ?
                 ''', (groupname))
         # group_count[0] - number of files, that have to be updated
         # group_count[1] - number of files have been updated
         group_count = self.__cursor.fetchone()
         return group_count[0] == group_count[1]
+    
 
     def successful_update(self, rID, update_time):
         ''' Update data on server that file update was succeeded.
@@ -97,6 +128,7 @@ class DBConnect(object):
                               SET LastDateUpdate = cast(? as datetime) \
                               WHERE ReportID = ?', (update_time, rID))
         self.__db.commit()
+        
 
     def failed_update(self, rID, update_time, update_error):
         ''' Update data on server in case if update was failed.

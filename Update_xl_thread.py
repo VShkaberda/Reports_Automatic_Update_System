@@ -38,19 +38,26 @@ class Main(object):
             self.fileinfo[key] = None
 
 
-    def email_gen(self):
+    def email_gen(self, dbconn=None):
         ''' Returns a dictionary with keywords for mail.
+            "dbconn" parameter signalized that it is a group mail.
         '''
+        # choose Group- or reportName and create path(-es) to attachment(-s)
+        if dbconn:
+            subj = self.fileinfo['GroupName']
+            att = []
+            for group_att in dbconn.group_attachments(self.fileinfo['GroupName']):
+                att.append(path.join(group_att[0], group_att[1]))
+        else:
+            subj = self.fileinfo['reportName']
+            att = [path.join(self.fileinfo['fpath'], self.fileinfo['fname'])] \
+                        if self.fileinfo['Attachments'] else None
         return {'to': self.fileinfo['NotificationsWhom'],
                 'copy': self.fileinfo['NotificationsCopy'],
-                'subject': '(Автоотчет) ' +  \
-                # choose Group- or reportName
-                (self.fileinfo['GroupName'] or self.fileinfo['reportName']) + \
+                'subject': '(Автоотчет) ' +  subj + \
                 ' (' + self.fileinfo['update_time'][:10] + ')', # date in brackets
                 'HTMLBody': self.fileinfo['Notificationstext'],
-                # create path to attachment
-                'att': path.join('\\' + self.fileinfo['fpath'], self.fileinfo['fname']) \
-                        if self.fileinfo['Attachments'] else None
+                'att': att
                 }
 
 
@@ -126,11 +133,12 @@ class Main(object):
                                                           self.fileinfo['SecondResourceLink'])
             # Send mail
             if self.fileinfo['update_error'] == 0 and self.fileinfo['Notifications'] == 1:
-                # if we have no group - send mail
-                # if we have GroupName - send mail if group_mail_check == 1
-                if self.fileinfo['GroupName'] == '' \
-                or dbconn.group_mail_check(self.fileinfo['GroupName']):
+                # if we have no group - send mail                
+                if self.fileinfo['GroupName'] == '':
                     self.fileinfo['update_error'] = send_mail(**self.email_gen())
+                # if we have GroupName - send mail if group_mail_check == 1
+                elif dbconn.group_mail_check(self.fileinfo['GroupName']):
+                    self.fileinfo['update_error'] = send_mail(**self.email_gen(dbconn))
             # Write in the db result of update
             self.db_update(dbconn)
             time.sleep(3)

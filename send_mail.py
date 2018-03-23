@@ -25,7 +25,8 @@ def send_mail(*, to='Фоззи|Логистика|Аналитики', copy=Non
             mail.HTMLBody = HTMLBody
         # In case you want to attach a file to the email
         if att:
-            mail.Attachments.Add(att)
+            for att_file in att:
+                mail.Attachments.Add(att_file)
         mail.Send()
     except Exception as e:
         print( "Common Error: %s" % str(e) )
@@ -49,7 +50,7 @@ if __name__ == '__main__':
         from os import path, getcwd
         root = getcwd()
         att = input('Attachment file name:')
-        att  = path.join(root, att)
+        att  = [path.join(root, att)]
         send_mail(to=to, copy=copy, subject=subject, body=body, att=att)
     else:
         send_mail(to=to, copy=copy, subject=subject, body=body)
