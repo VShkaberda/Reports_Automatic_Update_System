@@ -19,6 +19,7 @@ class Main(object):
         # Info about last file
         self.fileinfo = fileinfo
         self.sleep_duration = 30 # if no files to update
+        self.errors = {} # error description
 
 
     def db_update(self, dbconn):
@@ -29,7 +30,8 @@ class Main(object):
                                      self.fileinfo['update_time'])
         else:
             send_mail(subject='(Ошибка обновления) ' + self.fileinfo['reportName'],
-                      body='ID ошибки: ' + str(self.fileinfo['update_error']))
+                      body=('ID ошибки: ' + str(self.fileinfo['update_error']) + 
+                            '. ' + self.errors[self.fileinfo['update_error']]))
             dbconn.failed_update(self.fileinfo['reportID'],
                                  self.fileinfo['update_time'],
                                  self.fileinfo['update_error'])
@@ -99,6 +101,9 @@ class Main(object):
             to db, if the error has occured after file update.
         '''
         with DBConnect() as dbconn:
+            # download error description from db
+            for err in dbconn.error_description():
+                self.errors[err[0]] = err[1]
             # if info wasn't written to db after last file update
             if self.fileinfo['fname']:
                 self.db_update(dbconn)

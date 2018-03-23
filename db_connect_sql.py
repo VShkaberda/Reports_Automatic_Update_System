@@ -23,7 +23,18 @@ class DBConnect(object):
 
     def __exit__(self, type, value, traceback):
         self.__db.close()
-        
+    
+    
+    def error_description(self):
+        ''' Generator of error description from db.
+        '''
+        self.__cursor.execute('SELECT [Error], [Error_name] \
+            FROM [SILPOAnalitic].[dbo].[hermes_reports_error]')
+        for row in self.__cursor.fetchall():
+            if not row:
+                break
+            yield row
+            
 
     def file_to_update(self):
         ''' Fetching one file to be updated next.
