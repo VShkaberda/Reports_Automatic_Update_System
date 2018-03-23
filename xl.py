@@ -5,6 +5,7 @@ Created on Sun Jan  7 16:23:59 2018
 """
 from os import path
 from shutil import copy2
+from time import sleep
 
 import pythoncom
 import win32com.client
@@ -34,7 +35,11 @@ def update_file(root, f):
 
         # check whether the file is read-only
         if xl.ActiveWorkbook.ReadOnly == True:
-            raise ReadOnlyException(f)
+            wb.Close(SaveChanges=0)
+            sleep(5) # wait 5 seconds and recheck (handles Excel block)
+            wb = xl.Workbooks.Open(path.join(root, f))
+            if xl.ActiveWorkbook.ReadOnly == True:
+                raise ReadOnlyException(f)
 
         xl.Application.Run('\'' + f + '\'!Update')
 
