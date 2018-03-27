@@ -43,12 +43,21 @@ class DBConnect(object):
             Notifications, Attachments, NotificationsWhom, NotificationsCopy, Notificationstext,
             SecondResourceLink, GroupName
                 FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
-                WHERE 1=1
-                    AND
-                    (ScheduleTypeID = 2 -- monthly
-                    OR
-                        (datepart(weekday, ExecutedJob) =  datepart(weekday, getdate())
-                        AND -- instead of bit mask
+                WHERE (
+                        (ScheduleTypeID = 2 -- monthly
+                        AND isnull(Error, 0) = 0 -- don't try to refresh report with error
+                        AND ExecutedJob > ISNULL(LastDateUpdate, 0) -- didn't refresh after last job
+                        )
+                        OR
+                        (
+                            ((ScheduleTypeID = 0 -- direct schedule
+                            AND isnull(Error, 0) = 0 -- don't try to refresh report with error
+                            AND ExecutedJob > ISNULL(LastDateUpdate, 0) -- didn't refresh after last job
+                                )
+                                OR
+                            ScheduleTypeID = 5 -- refresh on time
+                            )
+                            AND -- instead of bit mask
                             (
                              (iif(DAY1=1, '1', '') +
                              iif(DAY2=1, '2', '') +
@@ -58,14 +67,10 @@ class DBConnect(object):
                              iif(DAY6=1, '6', '') +
                              iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
                             )
-                        AND
-                        ScheduleTypeID = 0 -- direct schedule
                         )
-                    )
-                    AND ExecutedJob > ISNULL(LastDateUpdate, 0) -- didn't refresh after last job
+                    )                    
                     AND StatusID = 1 -- working
-                    AND convert(time, getdate()) >= isnull(timefrom, '00:00') -- refresh later timefrom
-                    AND isnull(Error, 0) = 0 -- don't try to refresh report with error
+                    AND convert(time, getdate()) >= isnull(timefrom, '00:00') -- refresh later timefrom                    
                 ORDER BY [priority]''')
         return self.__cursor.fetchone()
     
@@ -75,21 +80,23 @@ class DBConnect(object):
         '''
         self.__cursor.execute('''SELECT FirstResourceLink, UploadFileName
                   FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
-                  where 1=1
-                	AND
-                	datepart(weekday, ExecutedJob) =  datepart(weekday, getdate())
-                    AND -- instead of bit mask
-                        (
-                         (iif(DAY1=1, '1', '') +
-                         iif(DAY2=1, '2', '') +
-                         iif(DAY3=1, '3', '') +
-                         iif(DAY4=1, '4', '') +
-                         iif(DAY5=1, '5', '') +
-                         iif(DAY6=1, '6', '') +
-                         iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
+                  where (ScheduleTypeID = 2 -- monthly
+                         OR
+                        (ScheduleTypeID = 0 -- direct schedule
+                             AND
+                             -- instead of bit mask
+                            (
+                             (iif(DAY1=1, '1', '') +
+                             iif(DAY2=1, '2', '') +
+                             iif(DAY3=1, '3', '') +
+                             iif(DAY4=1, '4', '') +
+                             iif(DAY5=1, '5', '') +
+                             iif(DAY6=1, '6', '') +
+                             iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
+                            )
                         )
+                    )
                 	AND StatusID = 1
-                	AND ScheduleTypeID = 0
                 	AND convert(time,getdate()) >= isnull(timefrom,'00:00')
                  AND Attachments = 1
                  AND GroupName = ?
@@ -107,23 +114,25 @@ class DBConnect(object):
                  sum(case when Error = 0 AND LastDateUpdate > ExecutedJob
                      then 1 else 0 end) + 1 as Updated
                   FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
-                  where 1=1
-                	AND
-                	datepart(weekday, ExecutedJob) =  datepart(weekday, getdate())
-                    AND -- instead of bit mask
-                        (
-                         (iif(DAY1=1, '1', '') +
-                         iif(DAY2=1, '2', '') +
-                         iif(DAY3=1, '3', '') +
-                         iif(DAY4=1, '4', '') +
-                         iif(DAY5=1, '5', '') +
-                         iif(DAY6=1, '6', '') +
-                         iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
+                  where (ScheduleTypeID = 2 -- monthly
+                         OR
+                        (ScheduleTypeID = 0 -- direct schedule
+                             AND
+                             -- instead of bit mask
+                            (
+                             (iif(DAY1=1, '1', '') +
+                             iif(DAY2=1, '2', '') +
+                             iif(DAY3=1, '3', '') +
+                             iif(DAY4=1, '4', '') +
+                             iif(DAY5=1, '5', '') +
+                             iif(DAY6=1, '6', '') +
+                             iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
+                            )
                         )
+                    )
                 	AND StatusID = 1
-                	AND ScheduleTypeID = 0
                 	AND convert(time,getdate()) >= isnull(timefrom,'00:00')
-                 AND GroupName = ?
+                    AND GroupName = ?
                 ''', (groupname))
         # group_count[0] - number of files, that have to be updated
         # group_count[1] - number of files have been updated
