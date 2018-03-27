@@ -23,7 +23,11 @@ class `DBConnect`() - establishes connection to database.
 
 Uses methods:
 
+`error_description`() - downloads error description from db.
+
 `file_to_update`() - returns info about file from db.
+
+`group_attachments`(<i>groupname</i>) - generator of attachments for email after updating all of <i>groupname</i> reports.
 
 `group_mail_check`(<i>groupname</i>) - returns 1 if all files from group <i>groupname</i> have been updated.
 
