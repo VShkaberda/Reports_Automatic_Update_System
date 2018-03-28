@@ -30,8 +30,11 @@ class Main(object):
                                      self.fileinfo['update_time'])
         else:
             send_mail(subject='(Ошибка обновления) ' + self.fileinfo['reportName'],
-                      body=('ID ошибки: ' + str(self.fileinfo['update_error']) + 
-                            '. ' + self.errors[self.fileinfo['update_error']]))
+                      HTMLBody=('ID ошибки: ' + str(self.fileinfo['update_error']) + 
+                    '. ' + self.errors[self.fileinfo['update_error']] + '<br>' +
+                    'Отчёт: <a href="' +
+                    path.join(self.fileinfo['fpath'], self.fileinfo['fname']) + '">' +
+                    self.fileinfo['reportName'] + '</a>.'))
             dbconn.failed_update(self.fileinfo['reportID'],
                                  self.fileinfo['update_time'],
                                  self.fileinfo['update_error'])
