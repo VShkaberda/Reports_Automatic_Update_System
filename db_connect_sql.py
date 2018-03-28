@@ -75,6 +75,8 @@ class DBConnect(object):
                                 iif(DAY6=1, '6', '') +
                                 iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, getdate()) as char(1)) + '%'
                                 )
+                            -- didn't refresh today
+                            AND DATEDIFF(DAY, 0, GETDATE()) + cast(TimeFrom as datetime) > ISNULL(LastDateUpdate, 0)
                         )
                     )
                     AND StatusID = 1 -- working
