@@ -44,31 +44,39 @@ class DBConnect(object):
             SecondResourceLink, GroupName
                 FROM [SILPOAnalitic].[dbo].[Hermes_Reports]
                 WHERE (
-                        (ScheduleTypeID = 2 -- monthly
-                        AND isnull(Error, 0) = 0 -- don't try to refresh report with error
-                        AND ExecutedJob > ISNULL(LastDateUpdate, 0) -- didn't refresh after last job
+                        ((ScheduleTypeID = 2 -- monthly
+                            OR
+                                (ScheduleTypeID = 0 -- direct schedule
+                                AND -- instead of bit mask
+                                    (
+                                 (iif(DAY1=1, '1', '') +
+                                 iif(DAY2=1, '2', '') +
+                                 iif(DAY3=1, '3', '') +
+                                 iif(DAY4=1, '4', '') +
+                                 iif(DAY5=1, '5', '') +
+                                 iif(DAY6=1, '6', '') +
+                                 iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
+                                    )
+                                )
+                            )
+                            AND isnull(Error, 0) = 0 -- don't try to refresh report with error
+                            AND ExecutedJob > ISNULL(LastDateUpdate, 0) -- didn't refresh after last job
                         )
                         OR
                         (
-                            ((ScheduleTypeID = 0 -- direct schedule
-                            AND isnull(Error, 0) = 0 -- don't try to refresh report with error
-                            AND ExecutedJob > ISNULL(LastDateUpdate, 0) -- didn't refresh after last job
-                                )
-                                OR
                             ScheduleTypeID = 5 -- refresh on time
-                            )
                             AND -- instead of bit mask
-                            (
-                             (iif(DAY1=1, '1', '') +
-                             iif(DAY2=1, '2', '') +
-                             iif(DAY3=1, '3', '') +
-                             iif(DAY4=1, '4', '') +
-                             iif(DAY5=1, '5', '') +
-                             iif(DAY6=1, '6', '') +
-                             iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, ExecutedJob) as char(1)) + '%'
-                            )
+                                (
+                                (iif(DAY1=1, '1', '') +
+                                iif(DAY2=1, '2', '') +
+                                iif(DAY3=1, '3', '') +
+                                iif(DAY4=1, '4', '') +
+                                iif(DAY5=1, '5', '') +
+                                iif(DAY6=1, '6', '') +
+                                iif(DAY7=1, '7', '')) like '%' + cast(datepart(weekday, getdate()) as char(1)) + '%'
+                                )
                         )
-                    )                    
+                    )
                     AND StatusID = 1 -- working
                     AND convert(time, getdate()) >= isnull(timefrom, '00:00') -- refresh later timefrom                    
                 ORDER BY [priority]''')
