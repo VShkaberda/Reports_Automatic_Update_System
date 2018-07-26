@@ -19,12 +19,12 @@ class DBConnect(object):
         self.__db = pyodbc.connect(conn_str)
         self.__cursor = self.__db.cursor()
         return self
-    
+
 
     def __exit__(self, type, value, traceback):
         self.__db.close()
-    
-    
+
+
     def error_description(self):
         ''' Generator of error description from db.
         '''
@@ -34,7 +34,7 @@ class DBConnect(object):
             if not row:
                 break
             yield row
-            
+
 
     def file_to_update(self):
         ''' Fetching one file to be updated next.
@@ -80,11 +80,11 @@ class DBConnect(object):
                         )
                     )
                     AND StatusID = 1 -- working
-                    AND convert(time, getdate()) >= isnull(timefrom, '00:00') -- refresh later timefrom                    
+                    AND convert(time, getdate()) >= isnull(timefrom, '00:00') -- refresh later timefrom
                 ORDER BY [priority]''')
         return self.__cursor.fetchone()
-    
-    
+
+
     def group_attachments(self, groupname):
         ''' Generator of attachments for email after updating all of group reports.
         '''
@@ -115,7 +115,7 @@ class DBConnect(object):
             if not row:
                 break
             yield row
-                         
+
 
     def group_mail_check(self, groupname):
         ''' Return 1 if all files from group have been updated.
@@ -148,7 +148,17 @@ class DBConnect(object):
         # group_count[1] - number of files have been updated
         group_count = self.__cursor.fetchone()
         return group_count[0] == group_count[1]
-    
+
+
+    def send_emergency_mail(self, reportName, to="silpo-sql-oper@fozzy.ua"):
+        ''' Send mail using msdb.dbo.spsend_mail_db.
+        '''
+        self.__cursor.execute('''EXEC msdb.dbo.sp_send_mail \
+            @recipients = '?', \
+            @subject = '(Ошибка обновления) Не отправлено письмо после обновления отчёта', \
+            @body = 'Обновлён последним: "?"'
+            ''', (to, reportName))
+
 
     def successful_update(self, rID, update_time):
         ''' Update data on server that file update was succeeded.
@@ -158,7 +168,7 @@ class DBConnect(object):
                               SET LastDateUpdate = cast(? as datetime) \
                               WHERE ReportID = ?', (update_time, rID))
         self.__db.commit()
-        
+
 
     def failed_update(self, rID, update_time, update_error):
         ''' Update data on server in case if update was failed.
@@ -171,6 +181,8 @@ class DBConnect(object):
 
 
 if __name__ == '__main__':
+    import getpass
     with DBConnect() as dbconn:
         assert dbconn.group_mail_check('Нулевой ЦТЗ') == 0, 'Group check failed.'
+        dbconn.send_emergency_mail('Test', getpass.getuser() + '@fozzy.ua')
     print('Connectes successfully.')

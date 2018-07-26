@@ -29,8 +29,12 @@ class Main(object):
             dbconn.successful_update(self.fileinfo['reportID'],
                                      self.fileinfo['update_time'])
         else:
-            send_mail(subject='(Ошибка обновления) ' + self.fileinfo['reportName'],
-                      HTMLBody=('ID ошибки: ' + str(self.fileinfo['update_error']) + 
+            # 6 - problem with Outlook. Send mail using SQL Server.
+            if self.fileinfo['update_error'] == 6:
+                dbconn.send_emergency_mail(self.fileinfo['reportName'])
+            else:
+                send_mail(subject='(Ошибка обновления) ' + self.fileinfo['reportName'],
+                      HTMLBody=('ID ошибки: ' + str(self.fileinfo['update_error']) +
                     '. ' + self.errors[self.fileinfo['update_error']] + '<br>' +
                     'Отчёт: <a href="' +
                     path.join(self.fileinfo['fpath'], self.fileinfo['fname']) + '">' +
@@ -141,13 +145,13 @@ class Main(object):
                                                           self.fileinfo['SecondResourceLink'])
             # Send mail
             if self.fileinfo['update_error'] == 0 and self.fileinfo['Notifications'] == 1:
-                # if we have no group - send mail                
+                # if we have no group - send mail
                 if self.fileinfo['GroupName'] == '':
                     self.fileinfo['update_error'] = send_mail(**self.email_gen())
                 # if we have GroupName - send mail if group_mail_check == 1
                 elif dbconn.group_mail_check(self.fileinfo['GroupName']):
                     self.fileinfo['update_error'] = send_mail(**self.email_gen(dbconn))
-            # Write in the db result of update
+            # Write in the db result of update and send mail in a case of a failure
             self.db_update(dbconn)
             time.sleep(3)
             self.sleep_duration = 30
