@@ -31,7 +31,7 @@ Uses methods:
 
 `group_mail_check`(<i>groupname</i>) - returns 1 if all files from group <i>groupname</i> have been updated.
 
-`send_emergency_mail`(<i>reportName, to</i>) - sends mail from server to recipient <i>to</i> using `msdb.dbo.sp_send_mail`. Contains message about failure with sending mail after <i>reportName</i> has been updated.
+`send_emergency_mail`(<i>reportName, to</i>) - sends mail from server to recipient <i>to</i> using `msdb.dbo.sp_send_dbmail`. Contains message about failure with sending mail after <i>reportName</i> has been updated.
 
 `successful_update`(<i>rID, update_time</i>) - writes <i>update_time</i> into field [LastDateUpdate] for row with [ReportID] = <i>rID</i> into db.
 

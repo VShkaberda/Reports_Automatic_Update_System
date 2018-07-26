@@ -153,11 +153,14 @@ class DBConnect(object):
     def send_emergency_mail(self, reportName, to="silpo-sql-oper@fozzy.ua"):
         ''' Send mail using msdb.dbo.spsend_mail_db.
         '''
-        self.__cursor.execute('''EXEC msdb.dbo.sp_send_mail \
-            @recipients = '?', \
-            @subject = '(Ошибка обновления) Не отправлено письмо после обновления отчёта', \
-            @body = 'Обновлён последним: "?"'
+        self.__cursor.execute('''DECLARE @to nvarchar(max) = ?,
+          @body nvarchar(max) = 'Обновлён последним: "'+ ? + '"'
+          EXEC msdb.dbo.sp_send_dbmail
+            @recipients = @to,
+            @subject = '(Ошибка обновления) Не отправлено письмо после обновления отчёта',
+            @body = @body
             ''', (to, reportName))
+        self.__db.commit()
 
 
     def successful_update(self, rID, update_time):
@@ -185,4 +188,5 @@ if __name__ == '__main__':
     with DBConnect() as dbconn:
         assert dbconn.group_mail_check('Нулевой ЦТЗ') == 0, 'Group check failed.'
         dbconn.send_emergency_mail('Test', getpass.getuser() + '@fozzy.ua')
-    print('Connectes successfully.')
+    print('Connected successfully.')
+    input('Press any button.')
