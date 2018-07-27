@@ -134,7 +134,7 @@ class Main(object):
             self.parse_SQL(file_sql)
             # Calling function to work with Excel
             print('{}'.format(time.strftime("%d-%m-%Y %H:%M:%S", time.localtime())), end=' ')
-            self.fileinfo['update_error'] = update_file('\\' + self.fileinfo['fpath'],
+            self.fileinfo['update_error'] = update_file(self.fileinfo['fpath'],
                                                          self.fileinfo['fname'])
             self.fileinfo['update_time'] = time.strftime("%d-%m-%Y %H:%M:%S",
                                                          time.localtime())

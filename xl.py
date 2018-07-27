@@ -26,10 +26,13 @@ def update_file(root, f):
         Return 0 if update was successful, otherwise error number.
     '''
     update_error = 1
+    # Additional backslash for network files
+    if root[0] == '\\': root = '\\' + root
+
     try:
         print("Updating ", f)
         xl = win32com.client.DispatchEx("Excel.Application")
-        xl.DisplayAlerts = False
+        xl.DisplayAlerts = False        
 
         wb = xl.Workbooks.Open(path.join(root, f))
 
