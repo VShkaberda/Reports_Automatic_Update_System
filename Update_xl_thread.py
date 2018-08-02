@@ -10,6 +10,7 @@ from pyodbc import Error as SQLError
 from send_mail import send_mail
 from xl import copy_file, update_file
 
+import sharepoint
 import threading
 import time
 
@@ -194,6 +195,9 @@ if __name__ == "__main__":
                 'SecondResourceLink': None,
                 'GroupName': None}
     main = Main(FileInfo)
+
+    sharepoint.sharepoint_check() # check connection to sharepoint
+
     while connection_retry[0] < 3 and thread.is_alive():
         try:
             main.run()
