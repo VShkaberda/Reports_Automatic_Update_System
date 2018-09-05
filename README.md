@@ -6,6 +6,7 @@
 <li>createdb.py - creates database(SQLite);</li>
 <li>db_connect.py - connects to SQLite database (for testing);</li>
 <li>db_connect_sql.py - connects to SQL Server;</li>
+<li>log_error.py - module to log errors;</li>
 <li>send_mail.py - contains functions to work with Outlook;</li>
 <li>sharepoint.py - checks connection to Sharepoint;</li>
 <li>xl.py - contains functions to work with Excel;</li>
@@ -34,11 +35,17 @@ Uses methods:
 
 `group_mail_check`(<i>groupname</i>) - returns 1 if all files from group <i>groupname</i> have been updated.
 
+`send_crash_mail`(<i>to</i>) - sends mail from server to recipient <i>to</i> using `msdb.dbo.sp_send_dbmail`. Contains message about crash of main program.
+
 `send_emergency_mail`(<i>reportName, to</i>) - sends mail from server to recipient <i>to</i> using `msdb.dbo.sp_send_dbmail`. Contains message about failure with sending mail after <i>reportName</i> has been updated.
 
 `successful_update`(<i>rID, update_time</i>) - writes <i>update_time</i> into field [LastDateUpdate] for row with [ReportID] = <i>rID</i> into db.
 
 `failed_update`(<i>rID, update_time, update_error</i>) - writes <i>update_error</i> into field [Error] and <i>update_time</i> into field [LastDateUpdate] for row with [ReportID] = <i>rID</i> to db.
+
+### log_error.py
+
+function `writelog`() - writes info about error into file log.txt to the same direcotory where the main program is.
 
 ### sharepoint.py
 

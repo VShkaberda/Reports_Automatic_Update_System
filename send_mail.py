@@ -3,6 +3,7 @@
 Created on Mon Jan 29 23:52:37 2018
 @author: Vadim Shkaberda
 """
+from log_error import writelog
 import sys
 import win32com.client as win32
 
@@ -29,6 +30,7 @@ def send_mail(*, to='Фоззи|Логистика|Аналитики', copy=Non
                 mail.Attachments.Add(att_file)
         mail.Send()
     except Exception as e:
+        writelog(e)
         print( "Common Error: %s" % str(e) )
         print(e)
         errorID = 6

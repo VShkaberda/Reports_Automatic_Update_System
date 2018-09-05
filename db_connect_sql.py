@@ -150,6 +150,19 @@ class DBConnect(object):
         return group_count[0] == group_count[1]
 
 
+    def send_crash_mail(self, to="silpo-sql-oper@fozzy.ua"):
+        ''' Send mail using msdb.dbo.spsend_mail_db.
+        '''
+        self.__cursor.execute('''DECLARE @to nvarchar(max) = ?,
+          @body nvarchar(max) = 'Работа была экстренно завершена. Подробности в фалйе log.txt'
+          EXEC msdb.dbo.sp_send_dbmail
+            @recipients = @to,
+            @subject = '(Внимание) Прекращение работы программы автоматического обновления',
+            @body = @body
+            ''', (to,))
+        self.__db.commit()
+
+
     def send_emergency_mail(self, reportName, to="silpo-sql-oper@fozzy.ua"):
         ''' Send mail using msdb.dbo.spsend_mail_db.
         '''

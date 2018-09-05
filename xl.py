@@ -3,6 +3,7 @@
 Created on Sun Jan  7 16:23:59 2018
 @author: Vadim Shkaberda
 """
+from log_error import writelog
 from os import path
 from shutil import copy2
 from time import sleep
@@ -32,7 +33,7 @@ def update_file(root, f):
     try:
         print("Updating ", f)
         xl = win32com.client.DispatchEx("Excel.Application")
-        xl.DisplayAlerts = False        
+        xl.DisplayAlerts = False
 
         wb = xl.Workbooks.Open(path.join(root, f))
 
@@ -50,7 +51,8 @@ def update_file(root, f):
         update_error = 0
 
     except pythoncom.com_error as e:
-        print( "Excel Error: %s" % str(e) )
+        writelog(e)
+        print( "Excel Error: {}".format(e) )
         # file hasn't been found
         if e.excepinfo[2].find('Не удалось найти', 0, 16) == 0:
             update_error = 2
@@ -59,12 +61,14 @@ def update_file(root, f):
             update_error = 4
 
     except ReadOnlyException as e:
-        print( "ReadOnly Error: %s" % str(e) )
+        writelog(e)
+        print( "ReadOnly Error: {}".format(e) )
         print(e.message, e.f)
         update_error = 3
 
     except Exception as e:
-        print( "Common Error: %s" % str(e) )
+        writelog(e)
+        print( "Common Error: {}".format(e) )
         print(e)
 
     finally:
@@ -84,7 +88,8 @@ def copy_file(root, f, dst):
         copy2(path.join(root, f), dst)
 
     except Exception as e:
-        print( "Error while copying: %s" % str(e) )
+        writelog(e)
+        print( "Error while copying: {}".format(e) )
         print(e)
         update_error = 5
 

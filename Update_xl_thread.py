@@ -5,12 +5,14 @@ Created on Sun Jan  7 15:53:26 2018
 """
 
 from db_connect_sql import DBConnect
+from log_error import writelog
 from os import path
 from pyodbc import Error as SQLError
 from send_mail import send_mail
 from xl import copy_file, update_file
 
 import sharepoint
+import sys
 import threading
 import time
 
@@ -202,6 +204,7 @@ if __name__ == "__main__":
         try:
             main.run()
         except SQLError as e:
+            writelog(e)
             # reset connection retries counter after 24 hours
             if time.time() - connection_retry[1] > 86400:
                 connection_retry[0] = 0
@@ -211,4 +214,13 @@ if __name__ == "__main__":
             connection_retry[0] += 1
             connection_retry[1] = time.time()
             time.sleep(300)
+        # in case of unexpected error - try to send email from SQL Server
+        except Exception as e:
+            writelog(e)
+            try:
+                with DBConnect() as dbconn:
+                    dbconn.send_crash_mail()
+            finally:
+                sys.exit()
+
     print('Exiting program.')
