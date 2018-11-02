@@ -51,7 +51,7 @@ def update_file(root, f):
         update_error = 0
 
     except pythoncom.com_error as e:
-        writelog(e)
+        writelog(e, f)
         print( "Excel Error: {}".format(e) )
         # file hasn't been found
         if e.excepinfo[2].find('Не удалось найти', 0, 16) == 0:
@@ -61,13 +61,13 @@ def update_file(root, f):
             update_error = 4
 
     except ReadOnlyException as e:
-        writelog(e)
+        writelog(e, f)
         print( "ReadOnly Error: {}".format(e) )
         print(e.message, e.f)
         update_error = 3
 
     except Exception as e:
-        writelog(e)
+        writelog(e, f)
         print( "Common Error: {}".format(e) )
         print(e)
 
@@ -88,7 +88,7 @@ def copy_file(root, f, dst):
         copy2(path.join(root, f), dst)
 
     except Exception as e:
-        writelog(e)
+        writelog(e, f)
         print( "Error while copying: {}".format(e) )
         print(e)
         update_error = 5

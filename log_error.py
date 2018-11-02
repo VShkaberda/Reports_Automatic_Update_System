@@ -8,14 +8,14 @@ Created on Thu Aug 30 16:24:54 2018
 from os import getcwd, path
 import time
 
-def writelog(e):
+def writelog(e, rName=''):
     ''' Write error log into file log.txt.
     '''
     fname = path.join(getcwd(), 'log.txt')
     now = time.localtime()
 
     with open(fname, 'a') as f:
-        f.write('{} {}\n'.format(time.strftime("%d-%m-%Y %H:%M:%S", now), e))
+        f.write('{} {} {}\n'.format(time.strftime("%d-%m-%Y %H:%M:%S", now), rName, e))
 
 
 if __name__ == '__main__':

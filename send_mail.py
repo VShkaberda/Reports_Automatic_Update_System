@@ -8,7 +8,7 @@ import sys
 import win32com.client as win32
 
 def send_mail(*, to='Фоззи|Логистика|Аналитики', copy=None, subject='Без темы',
-              body='', HTMLBody=None, att=None):
+              body='', HTMLBody=None, att=None, rName=''):
     ''' Function takes a list of named arguments and sends an e-mail
         via local Outlook account.
         Return 0 if no errors occured, otherwise error number.
@@ -30,7 +30,7 @@ def send_mail(*, to='Фоззи|Логистика|Аналитики', copy=Non
                 mail.Attachments.Add(att_file)
         mail.Send()
     except Exception as e:
-        writelog(e)
+        writelog(e, rName)
         print( "Common Error: %s" % str(e) )
         print(e)
         errorID = 6
@@ -40,9 +40,19 @@ def send_mail(*, to='Фоззи|Логистика|Аналитики', copy=Non
 if __name__ == '__main__':
     mode = input('Mail sending module test.\n\
           Press 1 to send without attachment.\n\
-          Press 2 to send with attachment\n')
-    if not (mode == '1' or mode == '2'):
+          Press 2 to send with attachment\n\
+          Press 3 to send test mail to logist-analytics\n')
+    if not (mode == '1' or mode == '2' or mode == '3'):
         print('Wrong input. Exiting.')
+        sys.exit(1)
+    if mode == '3':
+        #create dict
+        k = {'copy': 'Зубрійчук Віталій Андрійович',
+            'subject': '(Test) Test',
+            'HTMLBody': 'Test <i>HTMLBody</i>',
+            'rName': 'test rName'
+            }
+        send_mail(**k)
         sys.exit(1)
     to = input('Mail To (If None will use logist-analytics):')
     copy = input('Mail Copy:')
@@ -53,6 +63,12 @@ if __name__ == '__main__':
         root = getcwd()
         att = input('Attachment file name:')
         att  = [path.join(root, att)]
-        send_mail(to=to, copy=copy, subject=subject, body=body, att=att)
+        if to:
+            send_mail(to=to, copy=copy, subject=subject, body=body, att=att)
+        else:
+            send_mail(copy=copy, subject=subject, body=body, att=att)
     else:
-        send_mail(to=to, copy=copy, subject=subject, body=body)
+        if to:
+            send_mail(to=to, copy=copy, subject=subject, body=body)
+        else:
+            send_mail(copy=copy, subject=subject, body=body)

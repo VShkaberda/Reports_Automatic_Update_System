@@ -45,7 +45,7 @@ Uses methods:
 
 ### log_error.py
 
-function `writelog`() - writes info about error into file log.txt to the same direcotory where the main program is.
+function `writelog`() - writes info about error into the file log.txt to the same direcotory where the main program is.
 
 ### sharepoint.py
 
@@ -57,7 +57,7 @@ function `sharepoint_check`() - checks existence of the specific folder on share
 
 Module to send mail using local Outlook account.
 
-function `send_mail`(<i>to, copy, subject, body, HTMLBody, att</i>) - sends e-mail to <i>to</i> and copy to <i>copy</i> with subject <i>subject</i>. The body of letter is <i>body</i> and optional <i>HTMLBody</i>. Attachment <i>att</i> can be added.
+function `send_mail`(<i>to, copy, subject, body, HTMLBody, att, rName</i>) - sends e-mail to <i>to</i> and copy to <i>copy</i> with subject <i>subject</i>. The body of letter is <i>body</i> and optional <i>HTMLBody</i>. Attachment <i>att</i> can be added. <i>rName</i> is used to write name of last updated file into log.txt in case of error.  
 
 ### xl.py
 

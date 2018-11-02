@@ -23,6 +23,10 @@ class Main(object):
         self.fileinfo = fileinfo
         self.sleep_duration = 30 # if no files to update
         self.errors = {} # error description
+        # keys for SQL parsing
+        self.parse_keys = ('fname', 'fpath', 'reportID', 'reportName', 'Notifications', 'Attachments',
+                'NotificationsWhom', 'NotificationsCopy', 'Notificationstext', 'SecondResourceLink',
+                'GroupName')
 
 
     def db_update(self, dbconn):
@@ -39,9 +43,9 @@ class Main(object):
                 send_mail(subject='(Ошибка обновления) ' + self.fileinfo['reportName'],
                       HTMLBody=('ID ошибки: ' + str(self.fileinfo['update_error']) +
                     '. ' + self.errors[self.fileinfo['update_error']] + '<br>' +
-                    'Отчёт: <a href="' +
+                    'Отчёт: ID ' + str(self.fileinfo['reportID']) + ' <a href="' +
                     path.join(self.fileinfo['fpath'], self.fileinfo['fname']) + '">' +
-                    self.fileinfo['reportName'] + '</a>.'))
+                    self.fileinfo['reportName'] + '</a>.'), rName=self.fileinfo['reportName'])
             dbconn.failed_update(self.fileinfo['reportID'],
                                  self.fileinfo['update_time'],
                                  self.fileinfo['update_error'])
@@ -69,24 +73,16 @@ class Main(object):
                 'subject': '(Автоотчет) ' +  subj + \
                 ' (' + self.fileinfo['update_time'][:10] + ')', # date in brackets
                 'HTMLBody': self.fileinfo['Notificationstext'],
-                'att': att
+                'att': att,
+                'rName': self.fileinfo['reportName']
                 }
 
 
     def parse_SQL(self, file_sql):
         ''' Turns result from SQL query into a dictionary.
-        '''
-        self.fileinfo['fname'] = file_sql[0]
-        self.fileinfo['fpath'] = file_sql[1]
-        self.fileinfo['reportID'] = file_sql[2]
-        self.fileinfo['reportName'] = file_sql[3]
-        self.fileinfo['Notifications'] = file_sql[4]
-        self.fileinfo['Attachments'] = file_sql[5]
-        self.fileinfo['NotificationsWhom'] = file_sql[6]
-        self.fileinfo['NotificationsCopy'] = file_sql[7]
-        self.fileinfo['Notificationstext'] = file_sql[8]
-        self.fileinfo['SecondResourceLink'] = file_sql[9]
-        self.fileinfo['GroupName'] = file_sql[10]
+        '''        
+        for i in range(11):
+            self.fileinfo[self.parse_keys[i]] = file_sql[i]
 
 
     def time_to_sleep(self):
@@ -149,7 +145,7 @@ class Main(object):
             # Send mail
             if self.fileinfo['update_error'] == 0 and self.fileinfo['Notifications'] == 1:
                 # if we have no group - send mail
-                if self.fileinfo['GroupName'] == '':
+                if not self.fileinfo['GroupName']:
                     self.fileinfo['update_error'] = send_mail(**self.email_gen())
                 # if we have GroupName - send mail if group_mail_check == 1
                 elif dbconn.group_mail_check(self.fileinfo['GroupName']):
