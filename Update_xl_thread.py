@@ -196,20 +196,22 @@ if __name__ == "__main__":
 
     sharepoint.sharepoint_check() # check connection to sharepoint
 
-    while connection_retry[0] < 3 and thread.is_alive():
+    while connection_retry[0] < 10 and thread.is_alive():
         try:
             main.run()
         except SQLError as e:
             writelog(e)
-            # reset connection retries counter after 24 hours
-            if time.time() - connection_retry[1] > 86400:
-                connection_retry[0] = 0
+            # reset connection retries counter after 1 hour
+            if time.time() - connection_retry[1] > 3600:
+                connection_retry = [0, time.time()]
             print(e)
-            print('Retrying to connect in 5 minutes. \
-                  Number of retries:', connection_retry[0])
             connection_retry[0] += 1
-            connection_retry[1] = time.time()
-            time.sleep(300)
+            # magnify sleep interval in case of repeatable connect failure
+            t_sleep = 900 if connection_retry[0] == 9 else 20
+            print('Retrying to connect in {} seconds. \
+              Number of retries since the first fixed dicsonnect in 24 hours: {}'
+              .format(t_sleep, connection_retry[0]))
+            time.sleep(t_sleep)
         # in case of unexpected error - try to send email from SQL Server
         except Exception as e:
             writelog(e)
