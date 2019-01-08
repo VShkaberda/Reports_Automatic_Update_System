@@ -77,7 +77,7 @@ Usage: `pyinstaller -m Upd.manifest Update_xl_thread.py`
 
 <hr>
 
-## Requierments
+## Requirements
 
 * [pyodbc](https://github.com/mkleehammer/pyodbc)
  :warning: Works with `pyodbc` version < 4.0.22. `Pyodbc` 4.0.22 have an [issue with updating/inserting into field with type smalldatetime](https://github.com/mkleehammer/pyodbc/issues/334).

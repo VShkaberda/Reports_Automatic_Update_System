@@ -7,7 +7,12 @@ from log_error import writelog
 import sys
 import win32com.client as win32
 
-def send_mail(*, to='Фоззи|Логистика|Аналитики', copy=None, subject='Без темы',
+# example of subsription and default recipient
+REPLY_TO = b'\xd0\xa4\xd0\xbe\xd0\xb7\xd0\xb7\xd0\xb8|\
+\xd0\x9b\xd0\xbe\xd0\xb3\xd0\xb8\xd1\x81\xd1\x82\xd0\xb8\xd0\xba\xd0\xb0|\
+\xd0\x90\xd0\xbd\xd0\xb0\xd0\xbb\xd0\xb8\xd1\x82\xd0\xb8\xd0\xba\xd0\xb8'.decode()
+
+def send_mail(*, to=REPLY_TO, copy=None, subject='Без темы',
               body='', HTMLBody=None, att=None, rName=''):
     ''' Function takes a list of named arguments and sends an e-mail
         via local Outlook account.
@@ -24,6 +29,9 @@ def send_mail(*, to='Фоззи|Логистика|Аналитики', copy=Non
         mail.Body = body
         if HTMLBody:
             mail.HTMLBody = HTMLBody
+            
+            mail.HTMLBody += '<p><font face="Calibri" color ="Black" size = 3>\
+                                С уважением,<br>{}</font></p>'.format(REPLY_TO)
         # In case you want to attach a file to the email
         if att:
             for att_file in att:
@@ -47,8 +55,7 @@ if __name__ == '__main__':
         sys.exit(1)
     if mode == '3':
         #create dict
-        k = {'copy': 'Зубрійчук Віталій Андрійович',
-            'subject': '(Test) Test',
+        k = {'subject': '(Test) Test',
             'HTMLBody': 'Test <i>HTMLBody</i>',
             'rName': 'test rName'
             }

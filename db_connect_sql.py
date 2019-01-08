@@ -202,4 +202,4 @@ if __name__ == '__main__':
         assert dbconn.group_mail_check('Нулевой ЦТЗ') == 0, 'Group check failed.'
         dbconn.send_emergency_mail('Test', getpass.getuser() + '@fozzy.ua')
     print('Connected successfully.')
-    input('Press any button.')
+    input('Press Enter to exit...')
